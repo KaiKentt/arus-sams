@@ -169,7 +169,9 @@ function App() {
       <div className="flex-1 p-10 overflow-y-auto pt-16">
         {userRole === 'superadmin' && currentTab === 'super-dashboard' && <SuperAdminDashboard />}
         {userRole === 'headmaster' && currentTab === 'admin-management' && <AdminDashboard schoolId={userSchoolId} />}
-        {userRole === 'headmaster' && currentTab === 'school' && <SchoolProfile school_id={userSchoolId} />}
+        
+        {/* MODIFIED: Now accessible by all roles, passing userRole for permissions */}
+        {currentTab === 'school' && <SchoolProfile school_id={userSchoolId} userRole={userRole} />}
 
         {/* FEATURE 1 */}
         {currentTab === 'dashboard' && (
