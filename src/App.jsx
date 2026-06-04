@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import Auth from './Auth';
 import AdminDashboard from './AdminDashboard';
+import SuperAdminDashboard from './SuperAdminDashboard'; // <-- IMPORTED THE NEW DASHBOARD
 
 function App() {
   const [session, setSession] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [userSchoolId, setUserSchoolId] = useState(null); // Multi-tenant anchor
   const [currentTab, setCurrentTab] = useState('mobile-audit'); // Default to staff view
 
   useEffect(() => {
@@ -19,19 +21,22 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) fetchUserRole(session.user.id);
-      else setUserRole(null);
+      else {
+        setUserRole(null);
+        setUserSchoolId(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // 3. Fetch the Role from the Staff Table
-const fetchUserRole = async (userId) => {
+  // 3. Fetch the Role and School ID from the Staff Table
+  const fetchUserRole = async (userId) => {
     console.log("1. Checking Database for User ID:", userId);
     
     const { data, error } = await supabase
       .from('staff')
-      .select('role')
+      .select('role, school_id') // FETCHING BOTH ROLE AND SCHOOL_ID
       .eq('id', userId)
       .single();
 
@@ -42,8 +47,12 @@ const fetchUserRole = async (userId) => {
       // Forcing lowercase just in case there is a capital letter in the database
       const roleStr = data.role.toLowerCase().trim();
       setUserRole(roleStr);
+      setUserSchoolId(data.school_id); // SAVING THE SCHOOL_ID
       
-      if (roleStr === 'admin') {
+      // ROUTING LOGIC BASED ON HIERARCHY
+      if (roleStr === 'super-admin') {
+        setCurrentTab('super-dashboard');
+      } else if (roleStr === 'admin') {
         setCurrentTab('admin-management');
       }
     }
@@ -65,13 +74,21 @@ const fetchUserRole = async (userId) => {
         <h1 className="text-2xl font-bold text-teal-400 mb-8 border-b border-slate-700 pb-4">Arus-SAMS</h1>
         <div className="space-y-3 flex-1">
           
-          {/* RBAC: ONLY SHOW THIS BUTTON IF USER IS ADMIN */}
+          {/* SUPER ADMIN ROUTE: ONLY VISIBLE TO THE PLATFORM OWNER */}
+          {userRole === 'super-admin' && (
+            <button onClick={() => setCurrentTab('super-dashboard')} className={`block w-full text-left px-4 py-3 rounded transition-colors ${currentTab === 'super-dashboard' ? 'bg-teal-600' : 'hover:bg-slate-800'}`}>
+              🌍 Ministry Overview
+            </button>
+          )}
+
+          {/* HEADMASTER ADMIN ROUTE: ONLY VISIBLE TO SCHOOL ADMINS */}
           {userRole === 'admin' && (
             <button onClick={() => setCurrentTab('admin-management')} className={`block w-full text-left px-4 py-3 rounded transition-colors ${currentTab === 'admin-management' ? 'bg-teal-600' : 'hover:bg-slate-800'}`}>
               👥 User Management
             </button>
           )}
 
+          {/* STANDARD ROUTES FOR ALL ROLES */}
           <button onClick={() => setCurrentTab('dashboard')} className={`block w-full text-left px-4 py-3 rounded transition-colors ${currentTab === 'dashboard' ? 'bg-teal-600' : 'hover:bg-slate-800'}`}>🖥️ Asset Registry</button>
           <button onClick={() => setCurrentTab('mobile-audit')} className={`block w-full text-left px-4 py-3 rounded transition-colors ${currentTab === 'mobile-audit' ? 'bg-teal-600' : 'hover:bg-slate-800'}`}>📱 Mobile QR Audit</button>
         </div>
@@ -83,10 +100,18 @@ const fetchUserRole = async (userId) => {
 
       {/* DYNAMIC CONTENT AREA */}
       <div className="flex-1 p-10 overflow-y-auto">
-        {currentTab === 'admin-management' && userRole === 'admin' && (
-          <AdminDashboard />
+        
+        {/* SUPER ADMIN DASHBOARD */}
+        {currentTab === 'super-dashboard' && userRole === 'super-admin' && (
+          <SuperAdminDashboard />
         )}
 
+        {/* HEADMASTER DASHBOARD */}
+        {currentTab === 'admin-management' && userRole === 'admin' && (
+          <AdminDashboard schoolId={userSchoolId} /> 
+        )}
+
+        {/* ASSET REGISTRY PLACEHOLDER */}
         {currentTab === 'dashboard' && (
           <div className="fade-in">
             <h2 className="text-3xl font-bold text-slate-800 mb-6">Location & Elevation Registry</h2>
@@ -96,6 +121,7 @@ const fetchUserRole = async (userId) => {
           </div>
         )}
 
+        {/* MOBILE AUDIT PLACEHOLDER */}
         {currentTab === 'mobile-audit' && (
           <div className="max-w-md mx-auto fade-in">
             <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Field Asset Scan</h2>
@@ -104,6 +130,7 @@ const fetchUserRole = async (userId) => {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { supabaseAdmin } from './supabaseAdmin';
 
-export default function AdminDashboard() {
+// 1. Accept schoolId as a prop from App.jsx
+export default function AdminDashboard({ schoolId }) {
   const [staffList, setStaffList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,14 +16,19 @@ export default function AdminDashboard() {
   const [newIcNumber, setNewIcNumber] = useState('');
   const [newRole, setNewRole] = useState('teacher');
 
+  // Re-fetch if the schoolId ever changes or loads
   useEffect(() => {
-    fetchStaff();
-  }, []);
+    if (schoolId) {
+      fetchStaff();
+    }
+  }, [schoolId]);
 
-const fetchStaff = async () => {
-    // 1. Changed supabase to supabaseAdmin to bypass the Read firewall
-    // 2. Removed the .order() rule so the missing column doesn't crash it
-    const { data, error } = await supabaseAdmin.from('staff').select('*');
+  const fetchStaff = async () => {
+    // 2. SECURITY WALL: Only fetch staff that belong to this Admin's school
+    const { data, error } = await supabaseAdmin
+      .from('staff')
+      .select('*')
+      .eq('school_id', schoolId); 
     
     if (error) {
       console.error("Fetch Error:", error.message);
@@ -35,7 +41,7 @@ const fetchStaff = async () => {
     e.preventDefault();
     setFormError('');
 
-    // --- 1. FRONTEND VALIDATION GATEWAY ---
+    // --- FRONTEND VALIDATION GATEWAY ---
     const icRegex = /^\d{12}$/;
     if (!icRegex.test(newIcNumber)) {
       setFormError("IC Number must be exactly 12 digits without dashes (e.g., 040813130993).");
@@ -47,7 +53,7 @@ const fetchStaff = async () => {
       return;
     }
 
-    // --- 2. SECURE REGISTRATION ---
+    // --- SECURE REGISTRATION ---
     setLoading(true);
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -64,7 +70,7 @@ const fetchStaff = async () => {
 
     const newUserId = authData.user.id;
 
-    // 3. Wait 1.5 seconds, then use Admin bypass to update profile
+    // Wait 1.5 seconds, then use Admin bypass to update profile
     setTimeout(async () => {
       const { error: updateError } = await supabaseAdmin
         .from('staff')
@@ -72,7 +78,8 @@ const fetchStaff = async () => {
           full_name: newFullName, 
           ic_number: newIcNumber,
           role: newRole,
-          stored_password: newPassword
+          stored_password: newPassword,
+          school_id: schoolId // 3. Automatically lock this new user to the Admin's school
         })
         .eq('id', newUserId);
 
@@ -80,7 +87,7 @@ const fetchStaff = async () => {
         alert("Account created, but failed to save profile details: " + updateError.message);
       }
 
-      // 4. Close modal, clear form, refresh grid
+      // Close modal, clear form, refresh grid
       setIsModalOpen(false);
       setNewEmail('');
       setNewPassword('');
@@ -111,24 +118,19 @@ const fetchStaff = async () => {
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
-              {/* NEW: Sequence Number Header */}
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">No.</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Full Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">IC Number</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Email Address</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">System Role</th>
-              {/* NEW: Password Header */}
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Password</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
-            {/* Added 'index' parameter to the map function to generate sequential numbers */}
             {staffList.map((staff, index) => (
               <tr key={staff.id} className="hover:bg-slate-50">
-                {/* Auto-updating sequence number */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">{index + 1}</td>
-                
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{staff.full_name || '—'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{staff.ic_number || '—'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{staff.email}</td>
@@ -140,12 +142,9 @@ const fetchStaff = async () => {
                     {staff.role || 'teacher'}
                   </span>
                 </td>
-                
-                {/* Render the password directly in the grid */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono bg-slate-50">
                   {staff.stored_password || 'Not recorded'}
                 </td>
-                
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button className="text-teal-600 hover:text-teal-900">Edit</button>
                 </td>
