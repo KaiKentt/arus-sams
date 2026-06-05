@@ -14,17 +14,36 @@ const AdminDashboard = ({ schoolId }) => {
   const [phoneNo, setPhoneNo] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
 
   // Management States
   const [staffList, setStaffList] = useState([]);
-  const [editingStaff, setEditingStaff] = useState(null); // Holds the data of the person being edited
+  const [schoolName, setSchoolName] = useState("");
 
   // Fetch staff data on load and when switching to the 'manage' tab
+  // Fetch data on load and when switching tabs
   useEffect(() => {
+    if (schoolId) {
+      fetchSchoolName();
+    }
     if (activeTab === "manage") {
       fetchStaffList();
     }
   }, [schoolId, activeTab]);
+
+  // ADD THIS NEW FUNCTION:
+  const fetchSchoolName = async () => {
+    if (!schoolId) return;
+    const { data, error } = await supabase
+      .from("schools")
+      .select("school_name")
+      .eq("school_id", schoolId)
+      .single();
+
+    if (!error && data) {
+      setSchoolName(data.school_name);
+    }
+  };
 
   const fetchStaffList = async () => {
     if (!schoolId) return;
@@ -192,7 +211,7 @@ const AdminDashboard = ({ schoolId }) => {
       {activeTab === "manage" && (
         <div className="bg-white p-8 rounded-xl shadow border border-slate-200 fade-in">
           <h2 className="text-xl font-bold text-slate-800 mb-4">
-            Institutional Roster Directory
+            {schoolName ? `${schoolName} Master Staff List` : "Loading Master Staff List..."}
           </h2>
 
           <div className="overflow-x-auto rounded-lg border border-slate-200">
