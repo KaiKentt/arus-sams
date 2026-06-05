@@ -11,7 +11,7 @@ export default function EditAssetModal({
   const [assetName, setAssetName] = useState(asset.asset_name || "");
   const [category, setCategory] = useState(asset.category || "Electronics");
   const [locationId, setLocationId] = useState(asset.location_id || "");
-  const [status, setStatus] = useState(asset.status || "Good");
+  const [status, setStatus] = useState(asset.status || "Active");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,8 @@ export default function EditAssetModal({
       const { data } = await supabase
         .from("locations")
         .select("location_id, location_name")
-        .eq("school_id", schoolId);
+        .eq("school_id", schoolId)
+        .eq("location_type", "room");
       if (data) setLocations(data);
     };
     fetchLocations();
@@ -128,9 +129,11 @@ export default function EditAssetModal({
               onChange={(e) => setStatus(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white"
             >
-              <option value="Good">Good (Operational)</option>
-              <option value="Damaged">Damaged (Faulty)</option>
-              <option value="Submerged">Submerged (Critical)</option>
+              <option value="Active">Active (Operational)</option>
+              <option value="Under Maintenance">Under Maintenance</option>
+              <option value="Lost">Lost</option>
+              <option value="Safe">Safe (Stored)</option>
+              <option value="Disposed">Disposed</option>
             </select>
           </div>
 
