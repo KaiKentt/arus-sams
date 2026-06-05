@@ -7,6 +7,7 @@ import SchoolProfile from "./components/SchoolProfile";
 import UserProfile from "./components/UserProfile";
 import LocationManager from "./pages/LocationManager";
 import AssetMasterList from "./components/AssetMasterList";
+import AssetRegistration from "./pages/AssetRegistration";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -184,6 +185,15 @@ function App() {
               </button>
             )}
 
+            {userRole !== "standard_teacher" && userRole !== "superadmin" && (
+              <button
+                onClick={() => setCurrentTab("asset-registration")}
+                className={`block w-full text-left px-4 py-3 rounded transition-colors ${currentTab === "asset-registration" ? "bg-teal-600 font-medium" : "hover:bg-slate-800 text-slate-300"}`}
+              >
+                ✏️ Asset Registration
+              </button>
+            )}
+
             {userRole === "superadmin" && (
               <button
                 onClick={() => setCurrentTab("super-dashboard")}
@@ -217,7 +227,7 @@ function App() {
         )}
 
         {userRole === "headmaster" && currentTab === "admin-management" && (
-          <AdminDashboard schoolId={userSchoolId} />
+          <AdminDashboard schoolId={userSchoolId} onNavigate={setCurrentTab} />
         )}
 
         {currentTab === "school" && (
@@ -230,6 +240,10 @@ function App() {
 
         {currentTab === "locations" && (
           <LocationManager user={session} schoolId={userSchoolId} />
+        )}
+
+        {currentTab === "asset-registration" && (
+          <AssetRegistration user={session} schoolId={userSchoolId} userRole={userRole} />
         )}
 
         {currentTab === "mobile-audit" && (
