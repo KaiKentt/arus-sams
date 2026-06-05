@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function SchoolsTable({ schools }) {
+export default function SchoolsTable({ schools, onEdit, onDelete }) {
   return (
     <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
       <div className="p-5 bg-slate-50 border-b border-slate-200">
@@ -27,6 +27,9 @@ export default function SchoolsTable({ schools }) {
               <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
                 Contact
               </th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
@@ -41,7 +44,8 @@ export default function SchoolsTable({ schools }) {
                 <td className="px-6 py-4 text-sm text-slate-600">
                   {school.address_line ? (
                     <>
-                      {school.address_line}<br />
+                      {school.address_line}
+                      <br />
                       {school.postcode} {school.city}, {school.state}
                     </>
                   ) : (
@@ -55,6 +59,24 @@ export default function SchoolsTable({ schools }) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                   {school.contact_no || "—"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                  <button
+                    onClick={() => onEdit(school)}
+                    className="text-xl hover:scale-110 transition-transform"
+                    title="Edit School"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() =>
+                      onDelete(school.school_id, school.school_name)
+                    }
+                    className="text-xl hover:scale-110 transition-transform"
+                    title="Delete School"
+                  >
+                    🗑️
+                  </button>
                 </td>
               </tr>
             ))}
