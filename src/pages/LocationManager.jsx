@@ -15,7 +15,7 @@ export default function LocationManager({ user, schoolId }) {
   const effectiveSchoolId = schoolId || selectedSchoolId
 
   const { locations, tree, loading, error, reload } = useLocations(effectiveSchoolId)
-  const canEdit = user?.role === 'headmaster' || user?.role === 'superadmin'
+  const canEdit = user?.role === 'headmaster' || user?.role === 'superadmin' || user?.role === 'asset_teacher'
 
   // Add node modal state
   const [showModal, setShowModal] = useState(false)
