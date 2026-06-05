@@ -197,7 +197,6 @@ export default function AddAssetModal({ schoolId, onClose, refreshData }) {
               <option value="Active">Active (Operational)</option>
               <option value="Under Maintenance">Under Maintenance</option>
               <option value="Lost">Lost</option>
-              <option value="Safe">Safe (Stored)</option>
               <option value="Disposed">Disposed</option>
             </select>
           </div>

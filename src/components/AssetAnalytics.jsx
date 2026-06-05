@@ -10,7 +10,7 @@ export default function AssetAnalytics({ assets, title = "📊 Asset Intelligenc
   }
 
   const totalAssets = assets.length;
-  const activeAssets = assets.filter((a) => a.status === "Active" || a.status === "Safe").length;
+  const activeAssets = assets.filter((a) => a.status === "Active").length;
   const maintenanceAssets = assets.filter((a) => a.status === "Under Maintenance").length;
   const lostDisposedAssets = assets.filter((a) => a.status === "Lost" || a.status === "Disposed").length;
 
