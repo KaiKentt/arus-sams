@@ -48,7 +48,6 @@ def fetch_and_log_telemetry():
         # Extract Data
         station_name = station_link.text.strip()
         live_water_level = float(cells[5].text.strip())
-        # <--- NEW: Pulls the exact timestamp from the website!
         recorded_time = cells[4].text.strip()
 
         href = station_link['href']
@@ -57,21 +56,30 @@ def fetch_and_log_telemetry():
         print(
             f"✅ Data parsed: {station_name} -> {live_water_level}m at {recorded_time}")
 
-        # Push to Supabase
+        # Push to Supabase (UPGRADED SECTION)
+        # We also fetch the danger_level so Python can do the math dynamically!
         station_lookup = supabase.table("stations").select(
-            "station_id").eq("station_no", scraped_station_no).execute()
+            "station_id, danger_level").eq("station_no", scraped_station_no).execute()
 
         if len(station_lookup.data) > 0:
             internal_station_id = station_lookup.data[0]['station_id']
+            danger_level = station_lookup.data[0]['danger_level']
 
-            # Insert the new reading into the historical water_data table
+            # Calculate if we are in a flood state
+            is_critical = live_water_level >= danger_level
+
+            # Insert the new reading AND the critical status into historical water_data
             supabase.table("water_data").insert({
                 "station_id": internal_station_id,
                 "water_level": live_water_level,
-                "recorded_at": recorded_time  # <--- NEW: Saves the scraped timestamp!
+                "recorded_at": recorded_time,
+                "is_critical": is_critical
             }).execute()
 
-            print("✅ Database insert successful! Sleeping until next cycle...")
+            if is_critical:
+                print("🚨 CRITICAL: Danger level breached! Pushing alert to Arus-SAMS.")
+            else:
+                print("✅ Database insert successful! Sleeping until next cycle...")
         else:
             print(
                 f"⚠️ Station '{scraped_station_no}' not found in Supabase 'stations' table.")
