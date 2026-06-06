@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient'
+import QRCode from 'qrcode'
 
 // ── Generate registration number — Format: KPM/{ptj_code}/{school_code}/{H|R}/{YY}/{running_no}
 // Example from real data: KPM/JPNSAR/YBA1346/H/25/001
@@ -140,4 +141,79 @@ export async function fetchAssetTypeRefs(subcategoryCode) {
     .order('code')
   if (error) throw error
   return data || []
+}
+
+// ── QR ID SYSTEM ─────────────────────────────────────────────────────────────
+// QR encodes qr_code_id ONLY (e.g. YBA1346-00001) — NEVER registration_no
+
+// Generate next QR ID string — format: {branch_code}-{5-digit-padded}
+export async function generateQrId(supabase, schoolId) {
+  const { data: school, error } = await supabase
+    .from('schools')
+    .select('school_code, branch_code, last_qr_number')
+    .eq('school_id', schoolId)
+    .single()
+  if (error || !school) throw new Error('Could not fetch school data for QR generation.')
+
+  // Use branch_code if set, fall back to school_code (both are e.g. YBA1346)
+  const code = school.branch_code || school.school_code
+  if (!code) throw new Error('School code not set. Contact your administrator.')
+
+  const newNumber = (school.last_qr_number || 0) + 1
+  const paddedNo = String(newNumber).padStart(5, '0')
+  const qrId = `${code}-${paddedNo}`
+
+  return { qrId, newNumber }
+}
+
+// Increment QR counter — call AFTER confirmed asset INSERT
+export async function incrementQrCounter(supabase, schoolId, newNumber) {
+  const { error } = await supabase
+    .from('schools')
+    .update({ last_qr_number: newNumber })
+    .eq('school_id', schoolId)
+  if (error) throw error
+}
+
+// Generate QR image, upload to storage, update asset row with qr_code_id + url
+export async function generateAndSaveQR(supabase, assetId, qrId) {
+  const qrDataUrl = await QRCode.toDataURL(qrId, {
+    width: 400,
+    margin: 2,
+    color: { dark: '#000000', light: '#ffffff' },
+  })
+
+  const res = await fetch(qrDataUrl)
+  const blob = await res.blob()
+
+  const fileName = `qr/${assetId.replace(/\//g, '-')}.png`
+  const { error: uploadError } = await supabase.storage
+    .from('asset-images')
+    .upload(fileName, blob, { contentType: 'image/png', upsert: true })
+  if (uploadError) throw uploadError
+
+  const { data: urlData } = supabase.storage
+    .from('asset-images')
+    .getPublicUrl(fileName)
+
+  const { error: updateError } = await supabase
+    .from('assets')
+    .update({
+      qr_code_id: qrId,
+      qr_code_url: urlData.publicUrl,
+      qr_generated_at: new Date().toISOString(),
+    })
+    .eq('asset_id', assetId)
+  if (updateError) throw updateError
+
+  return { qrDataUrl, publicUrl: urlData.publicUrl }
+}
+
+// Safety check before saving — ensure QR ID is not already taken
+export async function checkQrIdExists(supabase, qrId) {
+  const { count } = await supabase
+    .from('assets')
+    .select('*', { count: 'exact', head: true })
+    .eq('qr_code_id', qrId)
+  return (count || 0) > 0
 }
