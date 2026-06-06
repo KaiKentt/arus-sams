@@ -12,6 +12,9 @@ import {
   fetchCategories,
   fetchSubcategories,
   fetchAssetTypeRefs,
+  generateQrId,
+  incrementQrCounter,
+  generateAndSaveQR,
 } from '../hooks/useAssets'
 
 const SECTIONS = [
@@ -159,6 +162,7 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState(null)
   const [savedAsset, setSavedAsset] = useState(null)
+  const [savedQrDataUrl, setSavedQrDataUrl] = useState(null)
   const [addedComponents, setAddedComponents] = useState([])
   const [showComponentForm, setShowComponentForm] = useState(false)
 
@@ -267,7 +271,6 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
   const handleSave = async () => {
     const validationErrors = validate()
     if (Object.keys(validationErrors).length > 0) {
-      // Navigate to section with first error using the fresh object
       if (validationErrors.assetDescription || validationErrors.category) setActiveSection(2)
       else if (validationErrors.acquisitionPrice || validationErrors.receivedDate) setActiveSection(3)
       else if (validationErrors.locationId) setActiveSection(4)
@@ -279,6 +282,7 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
     setSubmitError(null)
 
     try {
+      // 1. Generate or validate registration_no
       let finalRegNo
       let runningField = null
       let currentNo = null
@@ -301,7 +305,10 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
         }
       }
 
-      // Upload image (non-fatal if it fails)
+      // 2. Reserve QR ID (do not increment counter yet)
+      const { qrId, newNumber: qrNewNumber } = await generateQrId(supabase, schoolId)
+
+      // 3. Upload image (non-fatal)
       let imageUrl = null
       if (imageFile) {
         try {
@@ -309,7 +316,7 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
         } catch { /* continue without image */ }
       }
 
-      // Insert asset row
+      // 4. INSERT asset — qr_code_id is NULL until QR is generated
       const saved = await insertAsset(supabase, {
         asset_id: finalRegNo,
         registration_no: finalRegNo,
@@ -340,26 +347,44 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
         criticality_level: form.criticalityLevel,
         specifications: form.specifications || null,
         image_url: imageUrl,
+        qr_code_id: null,
         is_existing_asset: flow === 'existing',
         school_id: schoolId,
         staff_id: user.id,
         status: 'Active',
       })
 
-      // Increment running counter ONLY after confirmed insert
+      // 5. Generate QR image and save to storage + update asset row
+      let generatedQrDataUrl = null
+      try {
+        const qrResult = await generateAndSaveQR(supabase, saved.asset_id, qrId)
+        generatedQrDataUrl = qrResult.qrDataUrl
+      } catch (qrErr) {
+        // QR generation failure is non-fatal — asset is already saved
+        console.error('QR generation failed:', qrErr.message)
+      }
+
+      // 6. Increment QR counter AFTER confirmed QR generation
+      if (generatedQrDataUrl) {
+        await incrementQrCounter(supabase, schoolId, qrNewNumber)
+      }
+
+      // 7. Increment registration running counter
       if (runningField && currentNo) {
         await incrementRunningNo(supabase, schoolId, runningField, currentNo)
         setSchoolData(prev => ({ ...prev, [runningField]: currentNo }))
       }
 
-      // Log history
+      // 8. Log history
       await insertLogHistory(supabase, {
         assetId: finalRegNo,
         staffId: user.id,
-        logDetails: `Asset registered: ${form.assetDescription} — ${finalRegNo}`,
+        logDetails: `Asset registered: ${form.assetDescription} — ${finalRegNo} | QR: ${generatedQrDataUrl ? qrId : 'failed'}`,
       })
 
-      setSavedAsset(saved)
+      // 9. Show success screen
+      setSavedQrDataUrl(generatedQrDataUrl)
+      setSavedAsset({ ...saved, qr_code_id: generatedQrDataUrl ? qrId : null })
     } catch (err) {
       setSubmitError(err.message)
     } finally {
@@ -376,24 +401,75 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
     setErrors({})
     setSubmitError(null)
     setSavedAsset(null)
+    setSavedQrDataUrl(null)
     setAddedComponents([])
     setShowComponentForm(false)
     setActiveSection(1)
   }
 
+  // ── Print QR label handler
+  const handlePrintQR = () => {
+    const win = window.open('', '_blank')
+    win.document.write(`
+      <html><head><title>QR Label — ${savedAsset.qr_code_id}</title>
+      <style>
+        body { font-family: monospace; text-align: center; padding: 40px; background: #fff; }
+        img { width: 300px; height: 300px; display: block; margin: 0 auto 16px; }
+        .qr-id { font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 6px; }
+        .reg-no { font-size: 12px; color: #555; margin-bottom: 8px; }
+        .asset-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+        .school { font-size: 12px; color: #888; }
+        @media print { @page { margin: 10mm; } }
+      </style></head><body>
+      <img src="${savedQrDataUrl}" />
+      <div class="qr-id">${savedAsset.qr_code_id}</div>
+      <div class="reg-no">${savedAsset.registration_no}</div>
+      <div class="asset-name">${savedAsset.asset_description || savedAsset.asset_name}</div>
+      <script>window.onload = () => { window.print(); }</script>
+      </body></html>
+    `)
+    win.document.close()
+  }
+
   // ── Post-save view
   if (savedAsset) {
     return (
-      <div className="max-w-3xl mx-auto space-y-6 pb-10 fade-in">
-        <div className="bg-white rounded-2xl shadow border border-green-200 p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
+      <div className="max-w-2xl mx-auto space-y-6 pb-10 fade-in">
+        {/* Success card */}
+        <div className="bg-white rounded-2xl shadow border border-green-200 p-6 md:p-8 text-center">
+          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-3">✓</div>
           <h2 className="text-xl font-bold text-slate-800 mb-1">Asset Registered Successfully</h2>
-          <p className="text-sm text-slate-500 mb-4">{savedAsset.asset_description || savedAsset.asset_name}</p>
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-teal-50 border-2 border-teal-400 rounded-xl">
-            <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">Registration No</span>
-            <span className="font-mono font-bold text-xl text-teal-800 tracking-widest">{savedAsset.registration_no}</span>
+          <p className="text-sm text-slate-500 mb-5">{savedAsset.asset_description || savedAsset.asset_name}</p>
+
+          {/* QR Image */}
+          {savedQrDataUrl ? (
+            <div className="flex flex-col items-center gap-3 mb-5">
+              <img src={savedQrDataUrl} alt="QR Code" className="w-52 h-52 border-2 border-slate-200 rounded-xl" />
+              <div>
+                <p className="font-mono font-bold text-xl text-teal-700 tracking-widest">{savedAsset.qr_code_id}</p>
+                <p className="text-xs text-slate-400 mt-0.5">Scan to identify this asset</p>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+              ⚠ QR generation failed. Use the "Generate QR" button in Asset Master List.
+            </div>
+          )}
+
+          {/* Registration No */}
+          <div className="inline-flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl mb-5">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">KEW.PA No</span>
+            <span className="font-mono font-bold text-sm text-slate-700">{savedAsset.registration_no}</span>
           </div>
-          <div className="flex gap-3 justify-center mt-6">
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            {savedQrDataUrl && (
+              <button onClick={handlePrintQR}
+                className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg">
+                🖨 Print QR Label
+              </button>
+            )}
             <button onClick={handleReset}
               className="px-5 py-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
               + Register Another Asset
@@ -401,6 +477,7 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
           </div>
         </div>
 
+        {/* Components section */}
         <div className="bg-white rounded-2xl shadow border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
