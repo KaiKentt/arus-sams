@@ -60,6 +60,10 @@ export default function EditSchoolModal({ school, onClose, refreshData }) {
     if (error) {
       alert("Error updating school: " + error.message);
     } else {
+        
+      // Trigger the automatic station mapping calculation since coordinates might have changed
+      await supabaseAdmin.rpc("assign_nearest_stations", { p_school_id: school.school_id });
+
       refreshData();
       onClose();
     }
@@ -120,7 +124,6 @@ export default function EditSchoolModal({ school, onClose, refreshData }) {
             </div>
           </div>
 
-          {/* PTJ Code preview */}
           {ptjCode && (
             <div className="flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-200 rounded-lg">
               <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">PTJ Code:</span>

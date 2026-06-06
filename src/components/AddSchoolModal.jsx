@@ -41,24 +41,35 @@ export default function AddSchoolModal({ onClose, refreshData }) {
 
   const handleCreateSchool = async (e) => {
     e.preventDefault();
-    const { error } = await supabaseAdmin.from("schools").insert([
-      {
-        school_code: newSchoolCode,
-        school_name: newSchoolName,
-        address_line: newAddressLine,
-        postcode: newPostcode,
-        city: newCity,
-        state: newState,
-        ptj_code: newPtjCode,
-        latitude: parseFloat(newLatitude) || null,
-        longitude: parseFloat(newLongitude) || null,
-        contact_no: newContact,
-      },
-    ]);
+    
+    // 1. Insert the school and immediately .select() to get the generated UUID
+    const { data: newSchoolData, error } = await supabaseAdmin
+      .from("schools")
+      .insert([
+        {
+          school_code: newSchoolCode,
+          school_name: newSchoolName,
+          address_line: newAddressLine,
+          postcode: newPostcode,
+          city: newCity,
+          state: newState,
+          ptj_code: newPtjCode,
+          latitude: parseFloat(newLatitude) || null,
+          longitude: parseFloat(newLongitude) || null,
+          contact_no: newContact,
+        },
+      ])
+      .select();
 
     if (error) {
       alert("Error creating school: " + error.message);
     } else {
+      // 2. Automatically map the 3 nearest iHYDRO stations to this new school
+      if (newSchoolData && newSchoolData.length > 0) {
+        const newSchoolId = newSchoolData[0].school_id; 
+        await supabaseAdmin.rpc("assign_nearest_stations", { p_school_id: newSchoolId });
+      }
+
       refreshData();
       onClose();
     }
@@ -123,7 +134,6 @@ export default function AddSchoolModal({ onClose, refreshData }) {
             </div>
           </div>
 
-          {/* PTJ Code preview */}
           {newPtjCode && (
             <div className="flex items-center gap-3 px-4 py-3 bg-teal-50 border border-teal-200 rounded-lg">
               <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">PTJ Code auto-set:</span>
