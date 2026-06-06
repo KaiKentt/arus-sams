@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import SchoolFloodDashboard from "./SchoolFloodDashboard"; // 👈 New Dashboard Import
 
 const SchoolProfile = ({ school_id, userRole }) => {
-  // Added all the specific columns from your database schema
   const [school, setSchool] = useState({
     school_code: "",
     school_name: "",
@@ -151,6 +151,13 @@ const SchoolProfile = ({ school_id, userRole }) => {
               </p>
             </div>
           </div>
+
+          {/* 👇 THE NEW DASHBOARD COMPONENT 👇 */}
+          <div className="pt-6 border-t border-slate-100 mt-6">
+            <SchoolFloodDashboard schoolId={school_id} />
+          </div>
+          {/* ☝️ ---------------------------- ☝️ */}
+
         </div>
       ) : (
         /* EDIT MODE FORM */
@@ -218,7 +225,6 @@ const SchoolProfile = ({ school_id, userRole }) => {
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                 Latitude
               </label>
-              {/* type="number" with step="any" allows decimal coordinates */}
               <input
                 type="number"
                 step="any"
