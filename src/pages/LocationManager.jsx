@@ -164,38 +164,40 @@ export default function LocationManager({ user, schoolId }) {
   )
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          {isSuperadmin && (
-            <button
-              onClick={handleBackToSchools}
-              className="text-sm text-teal-600 hover:text-teal-700 mb-2 flex items-center gap-1"
-            >
-              ← Back to Schools
-            </button>
-          )}
-          <h1 className="text-2xl font-bold text-gray-800">Location Manager</h1>
-          {isSuperadmin && selectedSchoolName && (
-            <p className="text-sm font-medium text-teal-600 mt-0.5">{selectedSchoolName}</p>
-          )}
-          <p className="text-sm text-gray-500 mt-1">
-            Manage the school's physical location hierarchy for flood risk calculation.
-          </p>
-        </div>
-        {canEdit && (
+      <div className="mb-5">
+        {isSuperadmin && (
           <button
-            onClick={handleAddBlock}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700"
+            onClick={handleBackToSchools}
+            className="text-sm text-teal-600 hover:text-teal-700 mb-2 flex items-center gap-1"
           >
-            + Add Block
+            ← Back to Schools
           </button>
         )}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800">Location Manager</h1>
+            {isSuperadmin && selectedSchoolName && (
+              <p className="text-sm font-medium text-teal-600 mt-0.5">{selectedSchoolName}</p>
+            )}
+            <p className="text-xs md:text-sm text-gray-500 mt-1">
+              Manage the school's physical location hierarchy for flood risk calculation.
+            </p>
+          </div>
+          {canEdit && (
+            <button
+              onClick={handleAddBlock}
+              className="flex-shrink-0 px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700"
+            >
+              + Add Block
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="flex gap-3 mb-4 text-xs">
+      <div className="flex flex-wrap gap-2 mb-4 text-xs">
         <span className="px-2 py-1 rounded border bg-blue-100 text-blue-800 border-blue-300">Block</span>
         <span className="px-2 py-1 rounded border bg-green-100 text-green-800 border-green-300">Floor</span>
         <span className="px-2 py-1 rounded border bg-yellow-100 text-yellow-800 border-yellow-300">Room</span>

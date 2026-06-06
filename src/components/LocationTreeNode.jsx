@@ -2,15 +2,21 @@ import { useState } from 'react'
 import { toggleSafeZone, deleteLocation, getCumulativeElevation } from '../hooks/useLocations'
 
 const TYPE_COLORS = {
-  block: 'bg-blue-100 text-blue-800 border-blue-300',
-  floor: 'bg-green-100 text-green-800 border-green-300',
-  room:  'bg-yellow-100 text-yellow-800 border-yellow-300',
+  block: 'bg-blue-50 border-blue-300',
+  floor: 'bg-green-50 border-green-300',
+  room:  'bg-yellow-50 border-yellow-300',
+}
+
+const TYPE_BADGE = {
+  block: 'bg-blue-100 text-blue-700 border-blue-300',
+  floor: 'bg-green-100 text-green-700 border-green-300',
+  room:  'bg-yellow-100 text-yellow-700 border-yellow-300',
 }
 
 const TYPE_INDENT = {
   block: 'ml-0',
-  floor: 'ml-6',
-  room:  'ml-12',
+  floor: 'ml-3 md:ml-6',
+  room:  'ml-6 md:ml-12',
 }
 
 export default function LocationTreeNode({ node, flatList, onReload, onAddChild, canEdit }) {
@@ -43,61 +49,71 @@ export default function LocationTreeNode({ node, flatList, onReload, onAddChild,
 
   return (
     <div className={`${TYPE_INDENT[node.location_type] || 'ml-0'} mb-2`}>
-      <div className={`flex items-center justify-between p-3 rounded-lg border ${TYPE_COLORS[node.location_type] || 'bg-gray-100'}`}>
-        {/* Left — expand + info */}
-        <div className="flex items-center gap-2 flex-1">
+      <div className={`p-3 rounded-lg border ${TYPE_COLORS[node.location_type] || 'bg-gray-100'}`}>
+
+        {/* Top row — expand toggle + name + type badge */}
+        <div className="flex items-start gap-2">
           {hasChildren ? (
-            <button onClick={() => setExpanded(!expanded)} className="text-gray-500 w-5 text-sm font-bold">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-gray-500 w-5 text-xs font-bold mt-0.5 flex-shrink-0"
+            >
               {expanded ? '▼' : '▶'}
             </button>
           ) : (
-            <span className="w-5" />
+            <span className="w-5 flex-shrink-0" />
           )}
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm">{node.location_name}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-white bg-opacity-60 border capitalize">
+          <div className="flex-1 min-w-0">
+            {/* Name + badges row */}
+            <div className="flex items-center flex-wrap gap-1.5">
+              <span className="font-semibold text-sm text-gray-800">{node.location_name}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full border capitalize font-medium ${TYPE_BADGE[node.location_type]}`}>
                 {node.location_type}
               </span>
               {node.is_safe_zone && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500 text-white">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500 text-white font-medium">
                   ✓ Safe Zone
                 </span>
               )}
             </div>
-            <div className="text-xs mt-0.5 opacity-70">
-              Offset: +{node.elevation_offset}cm &nbsp;|&nbsp; Absolute: {cumulative}cm
+
+            {/* Elevation info */}
+            <div className="text-xs mt-1 text-gray-500">
+              Offset: +{node.elevation_offset}cm &nbsp;·&nbsp; Absolute: {cumulative}cm
             </div>
+
+            {/* Action buttons — shown below info on all screens */}
+            {canEdit && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {node.location_type !== 'room' && (
+                  <button
+                    onClick={() => onAddChild(node)}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
+                  >
+                    + {node.location_type === 'block' ? 'Add Floor' : 'Add Room'}
+                  </button>
+                )}
+                <button
+                  onClick={handleToggleSafeZone}
+                  className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
+                    node.is_safe_zone
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {node.is_safe_zone ? '✓ Safe' : 'Set Safe'}
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-500 hover:bg-red-50"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Right — actions (headmaster / superadmin only) */}
-        {canEdit && (
-          <div className="flex items-center gap-2 ml-2">
-            {node.location_type !== 'room' && (
-              <button
-                onClick={() => onAddChild(node)}
-                className="text-xs px-2 py-1 rounded bg-white bg-opacity-70 border hover:bg-opacity-100"
-              >
-                + Add {node.location_type === 'block' ? 'Floor' : 'Room'}
-              </button>
-            )}
-            <button
-              onClick={handleToggleSafeZone}
-              title="Toggle safe zone"
-              className={`text-xs px-2 py-1 rounded border ${node.is_safe_zone ? 'bg-emerald-500 text-white' : 'bg-white bg-opacity-70'}`}
-            >
-              {node.is_safe_zone ? '✓ Safe' : 'Safe?'}
-            </button>
-            <button
-              onClick={handleDelete}
-              className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-            >
-              ✕
-            </button>
-          </div>
-        )}
       </div>
 
       {expanded && hasChildren && (
