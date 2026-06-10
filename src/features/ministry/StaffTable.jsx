@@ -1,48 +1,48 @@
 import React, { useState } from "react";
+import Card from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
 import { 
   MagnifyingGlassIcon, 
   PencilSquareIcon, 
   TrashIcon,
   UserGroupIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  AcademicCapIcon,
+  BriefcaseIcon,
+  UserIcon
 } from "@heroicons/react/24/outline";
 
 export default function StaffTable({ globalStaff, onEdit, onDelete }) {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Simple filter for the search bar
   const filteredStaff = globalStaff.filter(staff => 
     staff.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     staff.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     staff.schools?.school_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Helper function to render clean, semantic role badges
   const renderRoleBadge = (role) => {
     switch(role) {
       case "superadmin":
         return (
-          <span className="inline-flex items-center gap-1 whitespace-nowrap bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider border border-blue-200">
-            <ShieldCheckIcon className="w-3 h-3"/> Ministry
-          </span>
+          <Badge variant="brand" icon={ShieldCheckIcon}>Ministry</Badge>
         );
       case "headmaster":
-        return <span className="inline-block whitespace-nowrap bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider border border-teal-200">Headmaster</span>;
+        return <Badge variant="brand" icon={AcademicCapIcon}>Headmaster</Badge>;
       case "asset_teacher":
-        return <span className="inline-block whitespace-nowrap bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider border border-indigo-200">Asset Officer</span>;
+        return <Badge variant="active" icon={BriefcaseIcon}>Asset Officer</Badge>;
       default:
-        return <span className="inline-block whitespace-nowrap bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider border border-slate-200">Teacher</span>;
+        return <Badge variant="neutral" icon={UserIcon}>Teacher</Badge>;
     }
   };
 
-  
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden fade-in">
+    <Card className="fade-in">
       {/* TABLE HEADER & SEARCH */}
       <div className="p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <UserGroupIcon className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-teal-50 rounded-lg border border-teal-100">
+            <UserGroupIcon className="w-6 h-6 text-teal-600" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-800">Global Staff Directory</h3>
@@ -55,7 +55,7 @@ export default function StaffTable({ globalStaff, onEdit, onDelete }) {
           <input
             type="text"
             placeholder="Search name, email, or school..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none transition-colors"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -102,7 +102,7 @@ export default function StaffTable({ globalStaff, onEdit, onDelete }) {
                   <td className="p-4 pr-6 text-right space-x-2">
                     <button
                       onClick={() => onEdit(staff)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                       title="Edit User"
                     >
                       <PencilSquareIcon className="w-5 h-5" />
@@ -121,6 +121,6 @@ export default function StaffTable({ globalStaff, onEdit, onDelete }) {
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   );
 }
