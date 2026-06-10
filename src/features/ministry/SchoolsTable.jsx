@@ -1,85 +1,105 @@
-import React from "react";
+import React, { useState } from "react";
+import { 
+  MagnifyingGlassIcon, 
+  PencilSquareIcon, 
+  TrashIcon, 
+  MapPinIcon,
+  BuildingLibraryIcon 
+} from "@heroicons/react/24/outline";
 
 export default function SchoolsTable({ schools, onEdit, onDelete }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Simple filter for the search bar
+  const filteredSchools = schools.filter(school => 
+    school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    school.ptj_code?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
-      <div className="p-5 bg-slate-50 border-b border-slate-200">
-        <h3 className="text-xl font-bold text-slate-800">
-          🏢 Registered Schools Network
-        </h3>
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden fade-in">
+      {/* TABLE HEADER & SEARCH */}
+      <div className="p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <BuildingLibraryIcon className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Schools Database</h3>
+            <p className="text-sm text-slate-500">Manage all registered facilities</p>
+          </div>
+        </div>
+        
+        <div className="relative w-full md:w-72">
+          <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search by name or PTJ code..."
+            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
+
+      {/* DATA TABLE */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-100">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
-                Code
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
-                School Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
-                Address
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
-                GPS Coordinates
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
-                Contact
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">
-                Actions
-              </th>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-100 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
+              <th className="p-4 pl-6">School Details</th>
+              <th className="p-4">PTJ Code</th>
+              <th className="p-4">Coordinates</th>
+              <th className="p-4">Contact</th>
+              <th className="p-4 text-right pr-6">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-slate-200">
-            {schools.map((school) => (
-              <tr key={school.school_id} className="hover:bg-slate-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-bold text-teal-700">
-                  {school.school_code || "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
-                  {school.school_name}
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-600">
-                  {school.address_line ? (
-                    <>
-                      {school.address_line}
-                      <br />
-                      {school.postcode} {school.city}, {school.state}
-                    </>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-500">
-                  {school.latitude && school.longitude
-                    ? `${school.latitude}, ${school.longitude}`
-                    : "Not mapped"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                  {school.contact_no || "—"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                  <button
-                    onClick={() => onEdit(school)}
-                    className="text-xl hover:scale-110 transition-transform"
-                    title="Edit School"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() =>
-                      onDelete(school.school_id, school.school_name)
-                    }
-                    className="text-xl hover:scale-110 transition-transform"
-                    title="Delete School"
-                  >
-                    🗑️
-                  </button>
+          <tbody className="divide-y divide-slate-100">
+            {filteredSchools.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="p-8 text-center text-slate-500">
+                  No schools found matching your search.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredSchools.map((school) => (
+                <tr key={school.school_id} className="hover:bg-slate-50 transition-colors group">
+                  <td className="p-4 pl-6">
+                    <p className="font-bold text-slate-800">{school.school_name}</p>
+                  </td>
+                  <td className="p-4">
+                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-md text-sm font-mono border border-slate-200">
+                      {school.ptj_code || "N/A"}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-1 text-sm text-slate-600 font-mono">
+                      <MapPinIcon className="w-4 h-4 text-slate-400" />
+                      {school.latitude}, {school.longitude}
+                    </div>
+                  </td>
+                  <td className="p-4 text-sm text-slate-600">
+                    {school.contact_no || "N/A"}
+                  </td>
+                  <td className="p-4 pr-6 text-right space-x-2">
+                    <button
+                      onClick={() => onEdit(school)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit School"
+                    >
+                      <PencilSquareIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(school.school_id, school.school_name)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete School"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
