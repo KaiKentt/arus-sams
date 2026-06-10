@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
+import Card from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
 import { 
   BuildingOfficeIcon, 
   UserGroupIcon, 
@@ -7,7 +9,8 @@ import {
   ExclamationTriangleIcon,
   ShieldCheckIcon,
   MapPinIcon,
-  PhoneIcon
+  PhoneIcon,
+  ExclamationCircleIcon
 } from "@heroicons/react/24/outline";
 
 export default function MinistryOverview() {
@@ -74,7 +77,7 @@ export default function MinistryOverview() {
   if (loading) {
     return (
       <div className="p-12 flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-500 font-bold tracking-wide">Loading Regional Telemetry...</p>
       </div>
     );
@@ -83,50 +86,50 @@ export default function MinistryOverview() {
   return (
     <div className="space-y-6 fade-in">
       
-      {/* KPI STAT CARDS (UNIFIED COLOR SCHEME) */}
+      {/* KPI STAT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <Card className="p-6 flex items-center gap-4">
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-            <BuildingOfficeIcon className="w-8 h-8 text-blue-600" />
+            <BuildingOfficeIcon className="w-8 h-8 text-teal-600" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Schools</p>
             <p className="text-3xl font-black text-slate-800">{stats.schools}</p>
           </div>
-        </div>
+        </Card>
         
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <Card className="p-6 flex items-center gap-4">
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-            <UserGroupIcon className="w-8 h-8 text-blue-600" />
+            <UserGroupIcon className="w-8 h-8 text-teal-600" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">System Users</p>
             <p className="text-3xl font-black text-slate-800">{stats.staff}</p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <Card className="p-6 flex items-center gap-4">
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-            <ComputerDesktopIcon className="w-8 h-8 text-blue-600" />
+            <ComputerDesktopIcon className="w-8 h-8 text-teal-600" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tracked Assets</p>
             <p className="text-3xl font-black text-slate-800">{stats.assets}</p>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* ACTIVE FLOOD ALERTS PANEL */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <Card>
         <div className="bg-slate-900 p-4 flex justify-between items-center">
           <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
             <ExclamationTriangleIcon className="w-5 h-5 text-red-400" />
             Active iHYDRO Flood Watch
           </h3>
           {activeAlerts.length > 0 && (
-            <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+            <Badge variant="danger" icon={ExclamationCircleIcon}>
               {activeAlerts.length} Active
-            </span>
+            </Badge>
           )}
         </div>
         
@@ -156,16 +159,20 @@ export default function MinistryOverview() {
                     <p className={`text-3xl font-black ${alert.status === 'danger' ? 'text-red-600' : 'text-orange-500'}`}>
                       {alert.level}m
                     </p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
-                      Status: {alert.status} • {alert.time}
-                    </p>
+                    <div className="mt-1">
+                      <Badge 
+                        variant={alert.status === 'danger' ? 'danger' : 'warning'}
+                      >
+                        Status: {alert.status} • {alert.time}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
     </div>
   );
