@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../supabaseClient"; // Secure client!
+import { supabase } from "../../supabaseClient";
+import Button from "../../components/ui/Button";
+import { 
+  UserPlusIcon, 
+  PlusCircleIcon 
+} from "@heroicons/react/24/outline";
 
 import SchoolsTable from "./SchoolsTable";
 import StaffTable from "./StaffTable";
@@ -15,14 +20,11 @@ export default function SuperAdminDashboard() {
   const [globalStaff, setGlobalStaff] = useState([]);
   const [globalAssets, setGlobalAssets] = useState([]);
 
-  // ✅ New State for Tabs (Defaults to the new Overview)
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Modal States
   const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   
-  // Edit States
   const [editingSchool, setEditingSchool] = useState(null); 
   const [editingStaff, setEditingStaff] = useState(null);
 
@@ -31,18 +33,15 @@ export default function SuperAdminDashboard() {
   }, []);
 
   const fetchSystemData = async () => {
-    // 1. Fetch schools
     const { data: schoolsData, error: schoolsError } = await supabase
       .from("schools")
       .select("*")
       .order("created_at", { ascending: false });
 
-    // 2. Fetch staff
     const { data: staffData, error: staffError } = await supabase
       .from("staff")
       .select(`*, schools (school_name)`);
 
-    // 3. Fetch ALL assets for the analytics dashboard
     const { data: assetsData, error: assetsError } = await supabase
       .from("assets")
       .select("*");
@@ -86,7 +85,7 @@ export default function SuperAdminDashboard() {
   return (
     <div className="fade-in space-y-8">
       {/* HEADER */}
-      <div className="flex justify-between items-center bg-slate-900 p-8 rounded-2xl shadow-lg text-white">
+      <div className="flex flex-col md:flex-row justify-between items-center bg-slate-900 p-8 rounded-2xl shadow-lg text-white gap-6">
         <div>
           <h2 className="text-3xl font-bold text-teal-400">
             Ministry Portal
@@ -95,17 +94,27 @@ export default function SuperAdminDashboard() {
             Manage all registered schools and global staff directory.
           </p>
         </div>
-        <div className="space-x-4">
-          <button onClick={() => setIsStaffModalOpen(true)} className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold shadow-md transition-colors">
-            + Add System User
-          </button>
-          <button onClick={() => setIsSchoolModalOpen(true)} className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-lg font-bold shadow-md transition-colors">
-            + Onboard New School
-          </button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <Button 
+            onClick={() => setIsStaffModalOpen(true)} 
+            variant="secondary"
+            className="whitespace-nowrap"
+          >
+            <UserPlusIcon className="w-5 h-5" />
+            Add System User
+          </Button>
+          <Button 
+            onClick={() => setIsSchoolModalOpen(true)} 
+            variant="primary"
+            className="whitespace-nowrap"
+          >
+            <PlusCircleIcon className="w-5 h-5" />
+            Onboard New School
+          </Button>
         </div>
       </div>
 
-      {/* ✅ TAB NAVIGATION */}
+      {/* TAB NAVIGATION */}
       <div className="flex gap-6 border-b border-slate-200">
         <button 
           onClick={() => setActiveTab("overview")} 
@@ -127,8 +136,7 @@ export default function SuperAdminDashboard() {
         </button>
       </div>
 
-      {/* ✅ CONDITIONAL RENDERING: Only show the active tab */}
-      
+      {/* CONDITIONAL RENDERING */}
       {activeTab === "overview" && (
         <div className="space-y-8">
           <MinistryOverview />
