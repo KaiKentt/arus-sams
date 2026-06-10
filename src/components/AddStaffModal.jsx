@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabaseAdmin } from "../supabaseAdmin"; // Make sure this path is correct
+import { supabase } from "../supabaseClient";
 
 export default function AddStaffModal({ schools, onClose, refreshData }) {
   const [staffLoading, setStaffLoading] = useState(false);
@@ -8,14 +8,15 @@ export default function AddStaffModal({ schools, onClose, refreshData }) {
   const [newPassword, setNewPassword] = useState("");
   const [newFullName, setNewFullName] = useState("");
   const [newIcNumber, setNewIcNumber] = useState("");
-  const [newRole, setNewRole] = useState("admin"); 
+  const [newRole, setNewRole] = useState("headmaster"); // Updated default
   const [selectedSchoolId, setSelectedSchoolId] = useState("");
 
   const handleCreateStaff = async (e) => {
     e.preventDefault();
     setStaffFormError("");
 
-    if (!selectedSchoolId && newRole !== "super-admin") {
+    // Updated check for 'superadmin' without the dash
+    if (!selectedSchoolId && newRole !== "superadmin") {
       setStaffFormError("You must select a school for this user role.");
       return;
     }
@@ -33,39 +34,28 @@ export default function AddStaffModal({ schools, onClose, refreshData }) {
 
     setStaffLoading(true);
 
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: newEmail,
-      password: newPassword,
-      email_confirm: true,
-    });
-
-    if (authError) {
-      setStaffFormError("Registration Error: " + authError.message);
-      setStaffLoading(false);
-      return;
-    }
-
-    const newUserId = authData.user.id;
-
-    setTimeout(async () => {
-      const { error: updateError } = await supabaseAdmin
-        .from("staff")
-        .update({
-          full_name: newFullName,
-          ic_number: newIcNumber,
-          role: newRole,
-          stored_password: newPassword,
-          school_id: newRole === "super-admin" ? null : selectedSchoolId,
-        })
-        .eq("id", newUserId);
-
-      if (updateError) {
-        alert("Account created, but failed to save profile details: " + updateError.message);
+    const { error } = await supabase.functions.invoke('create-staff-user', {
+      body: {
+        email: newEmail,
+        password: newPassword,
+        fullName: newFullName,
+        role: newRole,
+        icNumber: newIcNumber,
+        schoolId: newRole === "superadmin" ? null : selectedSchoolId,
       }
+    });
+    
+    setStaffLoading(false);
 
+    // Step 3: Deep error extraction
+    if (error) {
+      const contextError = error.context ? await error.context.json() : null;
+      const actualMessage = contextError?.error || error.message;
+      setStaffFormError("Registration Error: " + actualMessage);
+    } else {
       refreshData();
       onClose();
-    }, 1500);
+    }
   };
 
   return (
@@ -92,15 +82,16 @@ export default function AddStaffModal({ schools, onClose, refreshData }) {
 
           <div>
             <label className="block text-sm font-bold text-slate-700">System Role</label>
+            {/* Updated options to strictly match database check constraint */}
             <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md bg-white">
-              <option value="admin">Headmaster (School Admin)</option>
-              <option value="teacher">Standard Teacher</option>
-              <option value="asset-teacher">Asset Management Teacher</option>
-              <option value="super-admin">Ministry (Super Admin)</option>
+              <option value="headmaster">Headmaster (School Admin)</option>
+              <option value="standard_teacher">Standard Teacher</option>
+              <option value="asset_teacher">Asset Management Teacher</option>
+              <option value="superadmin">Ministry (Super Admin)</option>
             </select>
           </div>
 
-          {newRole !== "super-admin" && (
+          {newRole !== "superadmin" && (
             <div>
               <label className="block text-sm font-bold text-teal-700">Assign to School</label>
               <select value={selectedSchoolId} onChange={(e) => setSelectedSchoolId(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-teal-500 rounded-md bg-teal-50 shadow-sm" required>

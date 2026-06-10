@@ -17,14 +17,6 @@ export default function AdminAddStaffForm({ schoolId, onSuccess }) {
 
     const cleanIcNumber = icNumber.replace(/-/g, "");
 
-    const { data: existingStaff } = await supabase.from("staff").select("ic_number").eq("ic_number", cleanIcNumber);
-    
-    if (existingStaff && existingStaff.length > 0) {
-      alert("Registration Failed: A staff member with IC Number (" + cleanIcNumber + ") already exists.");
-      setIsUploading(false);
-      return;
-    }
-
     let finalProfilePicUrl = null;
     if (avatarFile) {
       const MAX_FILE_SIZE = 2 * 1024 * 1024;
@@ -46,24 +38,29 @@ export default function AdminAddStaffForm({ schoolId, onSuccess }) {
       finalProfilePicUrl = publicUrlData.publicUrl;
     }
 
-    const { error: insertError } = await supabase.from("staff").insert([{
-      full_name: fullName,
-      email: email,
-      stored_password: password,
-      role: role,
-      ic_number: cleanIcNumber,
-      phone_no: phoneNo,
-      school_id: schoolId,
-      profile_pic: finalProfilePicUrl,
-    }]);
+    const { error } = await supabase.functions.invoke('create-staff-user', {
+        body: {
+            email,
+            password,
+            fullName,
+            role,
+            icNumber: cleanIcNumber,
+            phoneNo,
+            schoolId,
+            profilePicUrl: finalProfilePicUrl,
+        }
+    });
 
     setIsUploading(false);
 
-    if (insertError) {
-      alert("Database Error: " + insertError.message);
+    // Step 3: Deep error extraction
+    if (error) {
+        const contextError = error.context ? await error.context.json() : null;
+        const actualMessage = contextError?.error || error.message;
+        alert("Registration Failed: " + actualMessage);
     } else {
-      alert("Comprehensive Staff Profile Registered Successfully!");
-      onSuccess(); // Tells the parent to switch back to the table view
+        alert("Comprehensive Staff Profile Registered Successfully!");
+        onSuccess();
     }
   };
 

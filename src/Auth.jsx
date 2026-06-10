@@ -10,21 +10,37 @@ export default function Auth({ onDemoLogin }) {
     e.preventDefault();
     setLoading(true);
 
-    // Look inside your custom 'staff' table for the matching email and password
-    const { data, error } = await supabase
-      .from('staff')
-      .select('*')
-      .eq('email', email)
-      .eq('stored_password', password)
-      .single();
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    setLoading(false);
+    if (authError) {
+      setLoading(false);
+      alert(authError.message || 'Invalid credentials. Please try again.');
+      return;
+    }
 
-    if (error || !data) {
-      alert('Invalid Email or Password. Please check with your Headmaster.');
+    if (authData.user) {
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('role, full_name, school_id')
+        .eq('id', authData.user.id)
+        .single();
+      
+      setLoading(false);
+
+      if (staffError) {
+        alert('Login successful, but failed to fetch staff profile: ' + staffError.message);
+      } else if (staffData) {
+        // Pass the full staff profile to the parent component
+        onDemoLogin(staffData);
+      } else {
+        alert('Login successful, but no matching staff profile found.');
+      }
     } else {
-      // Success! Send the user's data to the main App
-      onDemoLogin(data);
+      setLoading(false);
+      alert('Login failed. Please try again.');
     }
   };
 

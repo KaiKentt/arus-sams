@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabaseAdmin } from "../supabaseAdmin"; 
+import { supabase } from "../supabaseClient"; 
 
 export default function EditStaffModal({ staff, schools, onClose, refreshData }) {
   const [loading, setLoading] = useState(false);
@@ -7,7 +7,7 @@ export default function EditStaffModal({ staff, schools, onClose, refreshData })
 
   const [fullName, setFullName] = useState(staff.full_name || "");
   const [icNumber, setIcNumber] = useState(staff.ic_number || "");
-  const [role, setRole] = useState(staff.role || "admin");
+  const [role, setRole] = useState(staff.role || "headmaster");
   const [schoolId, setSchoolId] = useState(staff.school_id || "");
   const [password, setPassword] = useState(staff.stored_password || "");
 
@@ -15,40 +15,34 @@ export default function EditStaffModal({ staff, schools, onClose, refreshData })
     e.preventDefault();
     setFormError("");
 
-    if (!schoolId && role !== "super-admin") {
+    if (!schoolId && role !== "superadmin") {
       setFormError("You must select a school for this user role.");
       return;
     }
 
     setLoading(true);
 
-    // 1. If password was changed, update it in Supabase Auth so they can log in with it
+    const updatePayload = {
+      userId: staff.id,
+      fullName: fullName,
+      role: role,
+      icNumber: icNumber,
+      schoolId: role === "superadmin" ? null : schoolId,
+    };
+
+    // Only send password if it actually changed
     if (password !== staff.stored_password) {
-      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
-        staff.id,
-        { password: password }
-      );
-      if (authError) {
-        setFormError("Failed to update login password: " + authError.message);
-        setLoading(false);
-        return;
-      }
+      updatePayload.password = password;
     }
 
-    // 2. Update the public staff profile table
-    const { error: updateError } = await supabaseAdmin
-      .from("staff")
-      .update({
-        full_name: fullName,
-        ic_number: icNumber,
-        role: role,
-        stored_password: password,
-        school_id: role === "super-admin" ? null : schoolId,
-      })
-      .eq("id", staff.id);
+    const { error } = await supabase.functions.invoke('update-staff-user', {
+      body: updatePayload
+    });
 
-    if (updateError) {
-      setFormError("Failed to save profile details: " + updateError.message);
+    if (error) {
+      const contextError = error.context ? await error.context.json() : null;
+      const actualMessage = contextError?.error || error.message;
+      setFormError("Update Error: " + actualMessage);
       setLoading(false);
     } else {
       refreshData();
@@ -83,14 +77,14 @@ export default function EditStaffModal({ staff, schools, onClose, refreshData })
           <div>
             <label className="block text-sm font-bold text-slate-700">System Role</label>
             <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500">
-              <option value="admin">Headmaster (School Admin)</option>
-              <option value="teacher">Standard Teacher</option>
-              <option value="asset-teacher">Asset Management Teacher</option>
-              <option value="super-admin">Ministry (Super Admin)</option>
+              <option value="headmaster">Headmaster (School Admin)</option>
+              <option value="standard_teacher">Standard Teacher</option>
+              <option value="asset_teacher">Asset Management Teacher</option>
+              <option value="superadmin">Ministry (Super Admin)</option>
             </select>
           </div>
 
-          {role !== "super-admin" && (
+          {role !== "superadmin" && (
             <div>
               <label className="block text-sm font-bold text-teal-700">Assign to School</label>
               <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-teal-500 rounded-md bg-teal-50" required>
