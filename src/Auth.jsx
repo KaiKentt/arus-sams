@@ -24,10 +24,10 @@ export default function Auth({ onDemoLogin }) {
     if (authData.user) {
       const { data: staffData, error: staffError } = await supabase
         .from('staff')
-        .select('role, full_name, school_id')
+        .select('id, role, full_name, school_id, email') // ✅ Added id and email
         .eq('id', authData.user.id)
         .single();
-      
+
       setLoading(false);
 
       if (staffError) {
@@ -38,9 +38,6 @@ export default function Auth({ onDemoLogin }) {
       } else {
         alert('Login successful, but no matching staff profile found.');
       }
-    } else {
-      setLoading(false);
-      alert('Login failed. Please try again.');
     }
   };
 
