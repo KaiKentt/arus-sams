@@ -1,9 +1,9 @@
-
 import { 
   ChartBarIcon, 
   CheckCircleIcon, 
   WrenchScrewdriverIcon, 
-  ExclamationCircleIcon 
+  ExclamationCircleIcon,
+  ClipboardDocumentListIcon 
 } from "@heroicons/react/24/outline";
 
 export default function AssetAnalytics({ assets, title = "Asset Intelligence" }) {
@@ -15,11 +15,12 @@ export default function AssetAnalytics({ assets, title = "Asset Intelligence" })
     );
   }
 
-  // 1. Calculate Metrics
+  // 1. Calculate Metrics based on the 7 strict database statuses
   const total = assets.length;
   const active = assets.filter((a) => a.status === "Active").length;
-  const maintenance = assets.filter((a) => a.status === "Under Maintenance").length;
-  const missing = assets.filter((a) => a.status === "Lost" || a.status === "Disposed").length;
+  const pending = assets.filter((a) => a.status === "Audit Requested" || a.status === "Disposal Requested").length;
+  const maintenance = assets.filter((a) => a.status === "Under Maintenance" || a.status === "Broken").length;
+  const writtenOff = assets.filter((a) => a.status === "Lost" || a.status === "Disposed").length;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden fade-in">
@@ -35,7 +36,7 @@ export default function AssetAnalytics({ assets, title = "Asset Intelligence" })
       </div>
 
       {/* METRIC GRID */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="p-6 grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* Total Card */}
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Assets</p>
@@ -50,7 +51,15 @@ export default function AssetAnalytics({ assets, title = "Asset Intelligence" })
           <p className="text-3xl font-black text-green-800 mt-1">{active}</p>
         </div>
 
-        {/* Maintenance */}
+        {/* Pending Action (The New RBAC Workflow Metric) */}
+        <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+          <p className="text-xs font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+            <ClipboardDocumentListIcon className="w-4 h-4" /> Pending Action
+          </p>
+          <p className="text-3xl font-black text-indigo-800 mt-1">{pending}</p>
+        </div>
+
+        {/* In Repair / Broken */}
         <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
           <p className="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1">
             <WrenchScrewdriverIcon className="w-4 h-4" /> In Repair
@@ -58,12 +67,12 @@ export default function AssetAnalytics({ assets, title = "Asset Intelligence" })
           <p className="text-3xl font-black text-amber-800 mt-1">{maintenance}</p>
         </div>
 
-        {/* Missing/Disposed */}
+        {/* Written Off */}
         <div className="bg-red-50 p-4 rounded-lg border border-red-200">
           <p className="text-xs font-bold text-red-700 uppercase tracking-wider flex items-center gap-1">
-            <ExclamationCircleIcon className="w-4 h-4" /> Out of Service
+            <ExclamationCircleIcon className="w-4 h-4" /> Written Off
           </p>
-          <p className="text-3xl font-black text-red-800 mt-1">{missing}</p>
+          <p className="text-3xl font-black text-red-800 mt-1">{writtenOff}</p>
         </div>
       </div>
 
@@ -72,8 +81,9 @@ export default function AssetAnalytics({ assets, title = "Asset Intelligence" })
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Inventory Health Distribution</p>
         <div className="w-full h-3 bg-slate-100 rounded-full flex overflow-hidden border border-slate-200">
           <div style={{ width: `${(active/total)*100}%` }} className="bg-green-500" title="Operational"></div>
+          <div style={{ width: `${(pending/total)*100}%` }} className="bg-indigo-500" title="Pending Action"></div>
           <div style={{ width: `${(maintenance/total)*100}%` }} className="bg-amber-500" title="In Repair"></div>
-          <div style={{ width: `${(missing/total)*100}%` }} className="bg-red-500" title="Out of Service"></div>
+          <div style={{ width: `${(writtenOff/total)*100}%` }} className="bg-red-500" title="Written Off"></div>
         </div>
       </div>
     </div>

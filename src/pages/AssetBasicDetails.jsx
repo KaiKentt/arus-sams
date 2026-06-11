@@ -75,6 +75,8 @@ export default function AssetBasicDetails({
           >
             <option value="Active">Operational</option>
             <option value="Under Maintenance">Maintenance</option>
+            <option value="Disposal Requested">Request for Disposal</option>
+            <option value="Audit Requested">Request for Audit</option>
             <option value="Broken">Broken</option>
             <option value="Lost">Lost</option>
             <option value="Disposed">Disposed</option>

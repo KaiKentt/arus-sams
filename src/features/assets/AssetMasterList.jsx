@@ -6,7 +6,6 @@ import {
   PrinterIcon,
   PlusIcon,
   PencilSquareIcon,
-  TrashIcon,
   XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
@@ -438,24 +437,6 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
     setLocationPaths(paths);
   };
 
-  const handleDeleteAsset = async (assetId, assetName) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to permanently delete: ${assetName}?`,
-      )
-    )
-      return;
-    const { error } = await supabase
-      .from("assets")
-      .delete()
-      .eq("asset_id", assetId);
-    if (error) {
-      alert("Failed to delete asset: " + error.message);
-    } else {
-      fetchData();
-    }
-  };
-
   const closeQrModal = useCallback(() => setQrModalAsset(null), []);
 
   if (loading) {
@@ -662,18 +643,6 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
                               title="Edit"
                             >
                               <PencilSquareIcon className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDeleteAsset(
-                                  asset.asset_id,
-                                  asset.asset_name,
-                                )
-                              }
-                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                              title="Delete"
-                            >
-                              <TrashIcon className="w-5 h-5" />
                             </button>
                           </div>
                         </td>

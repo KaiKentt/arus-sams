@@ -155,8 +155,8 @@ export default function AssetRegistration({ user, schoolId, userRole, navigate }
   const [subcategories, setSubcategories] = useState([]);
   const [assetTypeOptions, setAssetTypeOptions] = useState([]);
 
-  const isReadOnly = userRole === 'headmaster';
-  const canRegister = userRole === 'asset_teacher' || userRole === 'superadmin';
+  const canRegister = userRole === 'asset_teacher' || userRole === 'superadmin' || userRole === 'headmaster';
+  const isReadOnly = !canRegister;
 
   const handleCancel = () => {
     const hasInput = Object.values(form).some(val => val !== '' && val !== 3 && val !== 'Purchase');

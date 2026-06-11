@@ -54,6 +54,9 @@ export default function EditAssetModal({
     }
   };
 
+  // Determine if the "Disposed" option should be visible based on the asset's initial state
+  const canDispose = ["Broken", "Disposal Requested", "Disposed"].includes(asset.status);
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -113,9 +116,15 @@ export default function EditAssetModal({
           >
             <option value="Active">Operational</option>
             <option value="Under Maintenance">Maintenance</option>
+            <option value="Disposal Requested">Request for Disposal</option>
+            <option value="Audit Requested">Request for Audit</option>
             <option value="Broken">Broken</option>
             <option value="Lost">Lost</option>
-            <option value="Disposed">Disposed</option>
+            
+            {/* Conditional Rendering for Disposed */}
+            {canDispose && (
+              <option value="Disposed">Disposed</option>
+            )}
           </Select>
 
           <div className="flex gap-3 mt-8 pt-4 border-t border-slate-100">
