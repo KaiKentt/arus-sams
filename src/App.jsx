@@ -25,7 +25,7 @@ import SchoolFloodDashboard from "./features/telemetry/SchoolFloodDashboard";
 
 // --- 4. LEGACY COMPONENTS & PAGES ---
 // Asset Management
-import AssetMasterList from "./components/AssetMasterList";
+import AssetMasterList from "./features/assets/AssetMasterList";
 import AssetRegistration from "./pages/AssetRegistration";
 import MobileAudit from "./pages/MobileAudit";
 

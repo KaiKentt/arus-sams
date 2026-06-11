@@ -13,18 +13,18 @@ import {
   ArrowsUpDownIcon,
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
-import { supabase } from "../supabaseClient";
-import AddAssetModal from "../features/assets/AddAssetModal";
-import EditAssetModal from "../features/assets/EditAssetModal";
-import AssetAnalytics from "../features/assets/AssetAnalytics";
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
-import Badge from "../components/ui/Badge";
+import { supabase } from "../../supabaseClient";
+import AddAssetModal from "./AddAssetModal";
+import EditAssetModal from "./EditAssetModal";
+import AssetAnalytics from "./AssetAnalytics";
+import Card from "../../components/ui/Card";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
 import {
   generateQrId,
   generateAndSaveQR,
   incrementQrCounter,
-} from "../hooks/useAssets";
+} from "../../hooks/useAssets";
 
 // ── Sort button ───────────────────────────────────────────────────────────────
 
