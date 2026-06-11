@@ -19,26 +19,17 @@ import {
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import Input from "../components/ui/Input";
 import { 
   CheckCircleIcon, 
-  ArrowLeftIcon, 
   PrinterIcon, 
   PlusIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
 } from "@heroicons/react/24/outline";
 
 import AssetBasicDetails from "./AssetBasicDetails";
 import AssetAdditionalDetails from "./AssetAdditionalDetails";
 import AssetImageUpload from "./AssetImageUpload";
-
-const SECTIONS = [
-  { id: 1, label: 'Registration' },
-  { id: 2, label: 'Identification' },
-  { id: 3, label: 'Financial' },
-  { id: 4, label: 'Placement' },
-  { id: 5, label: 'Additional' },
-];
 
 const INITIAL_FORM = {
   manualRegNo: '',
@@ -113,31 +104,25 @@ function ComponentForm({ parentAsset, componentCount, onAdd }) {
   };
 
   return (
-    <div className="space-y-4 pt-4 border-t border-slate-100">
+    <div className="space-y-4 pt-6 border-t border-slate-100">
       {err && <p className="text-xs text-red-500 font-bold">Error: {err}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Component Description</label>
-          <input 
-            value={desc} 
-            onChange={e => setDesc(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" 
-            placeholder="e.g. Monitor, Keyboard, CPU" 
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Manufacturer Serial (optional)</label>
-          <input 
-            value={serial} 
-            onChange={e => setSerial(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" 
-            placeholder="e.g. SN-123456" 
-          />
-        </div>
+        <Input 
+          label="Component Description"
+          value={desc} 
+          onChange={e => setDesc(e.target.value)}
+          placeholder="e.g. Monitor, Keyboard, CPU" 
+        />
+        <Input 
+          label="Manufacturer Serial (optional)"
+          value={serial} 
+          onChange={e => setSerial(e.target.value)}
+          placeholder="e.g. SN-123456" 
+        />
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400 font-mono">
-          Registration: <strong className="text-slate-600">{parentAsset.registration_no}-{componentCount + 1}</strong>
+      <div className="flex items-center justify-between bg-slate-50 p-4 rounded-lg">
+        <span className="text-xs text-slate-500 font-mono">
+          Registration: <strong className="text-teal-700">{parentAsset.registration_no}-{componentCount + 1}</strong>
         </span>
         <Button onClick={handleAdd} disabled={saving} variant="primary">
           {saving ? 'Adding...' : 'Add Component'}
@@ -148,11 +133,10 @@ function ComponentForm({ parentAsset, componentCount, onAdd }) {
 }
 
 // ── Main Page
-export default function AssetRegistration({ user, schoolId, userRole }) {
+export default function AssetRegistration({ user, schoolId, userRole, navigate }) {
   const [flow, setFlow] = useState('new');
   const [existingSubFlow, setExistingSubFlow] = useState('has_reg_no');
   const [form, setForm] = useState(INITIAL_FORM);
-  const [activeSection, setActiveSection] = useState(1);
   const [previewRegNo, setPreviewRegNo] = useState('');
   const [schoolData, setSchoolData] = useState(null);
   const [rooms, setRooms] = useState([]);
@@ -173,7 +157,25 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
 
   const isReadOnly = userRole === 'headmaster';
   const canRegister = userRole === 'asset_teacher' || userRole === 'superadmin';
-  const canOverrideType = userRole === 'headmaster' || userRole === 'superadmin';
+
+  const handleCancel = () => {
+    const hasInput = Object.values(form).some(val => val !== '' && val !== 3 && val !== 'Purchase');
+    if (hasInput) {
+      if (window.confirm("Are you sure you want to cancel? All entered data will be lost.")) {
+        if (typeof navigate === 'function') {
+          navigate("asset-master-list");
+        } else {
+          window.history.back();
+        }
+      }
+    } else {
+      if (typeof navigate === 'function') {
+        navigate("asset-master-list");
+      } else {
+        window.history.back();
+      }
+    }
+  };
 
   const handleInputChange = (field) => (e) => {
     const value = e.target?.value !== undefined ? e.target.value : e;
@@ -193,15 +195,6 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
     setForm(prev => ({ ...prev, subCategoryCode: code, subCategory: sub?.name || '', nationalCode: '' }));
     setAssetTypeOptions([]);
     fetchAssetTypeRefs(code).then(setAssetTypeOptions).catch(err => console.error(err));
-  };
-
-  const handleAssetTypeChange = (code) => {
-    const type = assetTypeOptions.find(t => t.code === code);
-    setForm(prev => ({
-      ...prev,
-      nationalCode: code,
-      assetDescription: prev.assetDescription || type?.name || '',
-    }));
   };
 
   useEffect(() => {
@@ -368,7 +361,6 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
     setImageFile(null);
     setAddedComponents([]);
     setShowComponentForm(false);
-    setActiveSection(1);
     setErrors({});
   };
 
@@ -386,16 +378,16 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
 
   if (savedAsset) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6 pb-10">
-        <Card className="p-8 text-center border-green-200">
+      <div className="max-w-2xl mx-auto space-y-6 pb-20 mt-10">
+        <Card className="p-8 text-center border-green-200 shadow-lg">
           <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-slate-800">Asset Registered Successfully</h2>
-          <p className="text-slate-500 mb-6">{savedAsset.asset_name}</p>
+          <p className="text-slate-500 mb-8">{savedAsset.asset_name}</p>
           
           {savedQrDataUrl && (
-            <div className="flex flex-col items-center gap-2 mb-6">
-              <img src={savedQrDataUrl} alt="QR Code" className="w-48 h-48 border-2 border-slate-100 rounded-xl" />
-              <p className="font-mono font-bold text-teal-700 tracking-widest">{savedAsset.qr_code_id}</p>
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <img src={savedQrDataUrl} alt="QR Code" className="w-52 h-52 border-4 border-slate-50 rounded-2xl shadow-inner" />
+              <p className="font-mono font-bold text-teal-700 tracking-[0.2em] text-lg">{savedAsset.qr_code_id}</p>
             </div>
           )}
 
@@ -412,20 +404,20 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
         </Card>
 
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-800">Accessories & Components</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-slate-800 uppercase text-sm tracking-wider">Accessories & Components</h3>
             {!showComponentForm && (
-              <Button onClick={() => setShowComponentForm(true)} variant="primary">
+              <Button onClick={() => setShowComponentForm(true)} variant="primary" className="px-4 py-2 text-sm">
                 Add Component
               </Button>
             )}
           </div>
           {addedComponents.length > 0 && (
-            <ul className="divide-y divide-slate-100 mb-4">
+            <ul className="divide-y divide-slate-100 mb-6 bg-slate-50 rounded-lg overflow-hidden border border-slate-100">
               {addedComponents.map((c, i) => (
-                <li key={i} className="py-3 flex justify-between text-sm">
+                <li key={i} className="px-4 py-3 flex justify-between items-center text-sm">
                   <span className="font-medium text-slate-700">{c.description}</span>
-                  <span className="font-mono text-teal-700 font-bold">{c.regNo}</span>
+                  <span className="font-mono text-teal-700 font-bold bg-white px-2 py-1 rounded border border-teal-100">{c.regNo}</span>
                 </li>
               ))}
             </ul>
@@ -443,102 +435,72 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-28">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Asset Registration</h1>
-        <p className="text-slate-500 font-medium">Add physical assets under KEW.PA-3 or KEW.PA-4 standards.</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pt-6">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Asset Registration</h1>
+          <p className="text-slate-500 mt-1 font-medium">Add physical assets under KEW.PA-3 or KEW.PA-4 standards.</p>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow border border-slate-200 p-5 mb-6">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Asset Entry Type</p>
-        <div className="flex gap-2 p-1 bg-slate-100 rounded-lg w-fit">
-          {['new', 'existing'].map(f => (
-            <button 
-              key={f} 
-              onClick={() => !isReadOnly && setFlow(f)}
-              className={`px-6 py-2 rounded-md font-bold text-sm transition-colors ${flow === f ? 'bg-white shadow text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              {f === 'new' ? 'New Asset' : 'Existing Asset'}
-            </button>
-          ))}
-        </div>
-        
-        {flow === 'existing' && (
-          <div className="mt-4 space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input type="radio" checked={existingSubFlow === 'has_reg_no'} onChange={() => setExistingSubFlow('has_reg_no')} className="accent-teal-600" />
-              <span className="text-sm font-semibold text-slate-700">Manual Entry</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input type="radio" checked={existingSubFlow === 'no_reg_no'} onChange={() => setExistingSubFlow('no_reg_no')} className="accent-teal-600" />
-              <span className="text-sm font-semibold text-slate-700">Auto Generate</span>
-            </label>
-            {existingSubFlow === 'has_reg_no' && (
-              <div className="max-w-sm pt-2">
-                <input 
-                  value={form.manualRegNo} 
-                  onChange={handleInputChange('manualRegNo')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-sm focus:ring-2 focus:ring-teal-400 outline-none" 
-                  placeholder="KPM/JPNS/SKRP/H/25/001" 
-                />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-8">
+          <Card className="p-6">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Entry Configuration</p>
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-6">
+              {['new', 'existing'].map(f => (
+                <button 
+                  key={f} 
+                  onClick={() => !isReadOnly && setFlow(f)}
+                  className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${flow === f ? 'bg-white shadow-sm text-teal-700' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {f === 'new' ? 'New Asset' : 'Existing Asset'}
+                </button>
+              ))}
+            </div>
+            
+            {flow === 'existing' && (
+              <div className="space-y-4 pt-2">
+                <div className="flex flex-col gap-3">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input type="radio" checked={existingSubFlow === 'has_reg_no'} onChange={() => setExistingSubFlow('has_reg_no')} className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300" />
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-teal-700 transition-colors">Manual Registry Entry</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input type="radio" checked={existingSubFlow === 'no_reg_no'} onChange={() => setExistingSubFlow('no_reg_no')} className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300" />
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-teal-700 transition-colors">Auto-Generate ID</span>
+                  </label>
+                </div>
+                {existingSubFlow === 'has_reg_no' && (
+                  <div className="pt-2">
+                    <Input 
+                      label="Manual Registration No."
+                      value={form.manualRegNo} 
+                      onChange={handleInputChange('manualRegNo')}
+                      className="font-mono uppercase tracking-wider"
+                      placeholder="KPM/JPNS/SKRP/H/25/001" 
+                    />
+                  </div>
+                )}
               </div>
             )}
+          </Card>
+
+          <div className="bg-teal-900 rounded-2xl p-6 text-white shadow-xl shadow-teal-900/20 relative overflow-hidden group">
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-teal-800 rounded-full opacity-20 group-hover:scale-110 transition-transform duration-500"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-bold text-teal-300 uppercase tracking-[0.2em]">Registry Preview</p>
+                {form.assetType && (
+                  <Badge variant="brand" className="bg-teal-500/20 text-teal-100 border-teal-500/30">
+                    {form.assetType === 'H' ? 'KEW.PA-3' : 'KEW.PA-4'}
+                  </Badge>
+                )}
+              </div>
+              <p className="font-mono font-bold text-xl tracking-widest break-all leading-relaxed">{previewRegNo}</p>
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="flex items-center gap-4 bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mb-6">
-        <div className="flex-1">
-          <p className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-0.5">Registration No Preview</p>
-          <p className="font-mono font-bold text-lg text-teal-900 tracking-widest">{previewRegNo}</p>
-        </div>
-        {form.assetType && (
-          <Badge variant="brand">
-            {form.assetType === 'H' ? 'KEW.PA-3' : 'KEW.PA-4'}
-          </Badge>
-        )}
-      </div>
-
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {SECTIONS.map(s => (
-          <button 
-            key={s.id} 
-            onClick={() => setActiveSection(s.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors whitespace-nowrap ${activeSection === s.id ? 'bg-teal-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {activeSection <= 2 && (
-            <AssetBasicDetails 
-              form={form} 
-              errors={errors} 
-              handleInputChange={handleInputChange}
-              categories={categories}
-              subcategories={subcategories}
-              handleCategoryChange={handleCategoryChange}
-              handleSubCategoryChange={handleSubCategoryChange}
-              rooms={rooms}
-              locationPaths={locationPaths}
-              isReadOnly={isReadOnly}
-            />
-          )}
-          
-          {activeSection >= 3 && (
-            <AssetAdditionalDetails 
-              form={form} 
-              errors={errors} 
-              handleInputChange={handleInputChange}
-              isReadOnly={isReadOnly}
-            />
-          )}
-        </div>
-
-        <div className="lg:col-span-1">
           <AssetImageUpload 
             imagePreview={imagePreview} 
             setImagePreview={setImagePreview} 
@@ -546,42 +508,41 @@ export default function AssetRegistration({ user, schoolId, userRole }) {
             isReadOnly={isReadOnly}
           />
         </div>
-      </div>
 
-      <div className="flex justify-between mt-8">
-        <Button 
-          variant="secondary" 
-          onClick={() => setActiveSection(s => Math.max(1, s - 1))} 
-          disabled={activeSection === 1}
-        >
-          <ChevronLeftIcon className="w-4 h-4 mr-1" />
-          Previous
-        </Button>
-        <Button 
-          variant="secondary" 
-          onClick={() => setActiveSection(s => Math.min(5, s + 1))} 
-          disabled={activeSection === 5}
-        >
-          Next
-          <ChevronRightIcon className="w-4 h-4 ml-1" />
-        </Button>
-      </div>
+        <div className="lg:col-span-2 space-y-8">
+          <AssetBasicDetails 
+            form={form} 
+            errors={errors} 
+            handleInputChange={handleInputChange}
+            categories={categories}
+            subcategories={subcategories}
+            handleCategoryChange={handleCategoryChange}
+            handleSubCategoryChange={handleSubCategoryChange}
+            rooms={rooms}
+            locationPaths={locationPaths}
+            isReadOnly={isReadOnly}
+          />
+          
+          <AssetAdditionalDetails 
+            form={form} 
+            errors={errors} 
+            handleInputChange={handleInputChange}
+            isReadOnly={isReadOnly}
+          />
 
-      {canRegister && (
-        <div className="fixed bottom-0 left-0 md:left-72 right-0 bg-white border-t border-slate-200 p-4 z-40 shadow-lg">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="text-sm">
-              {submitError ? <span className="text-red-600 font-bold">Error: {submitError}</span> : <span className="text-slate-500 font-medium">Ready to register asset</span>}
+          {canRegister && (
+            <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 pt-4">
+              {submitError && <span className="text-red-600 text-sm font-bold md:mr-4">Error: {submitError}</span>}
+              <div className="flex gap-3">
+                <Button onClick={handleCancel} variant="secondary" className="px-8">Cancel</Button>
+                <Button onClick={handleSave} disabled={saving} variant="primary" className="px-8">
+                  {saving ? "Registering..." : "Register Asset"}
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Button onClick={() => window.history.back()} variant="secondary">Cancel</Button>
-              <Button onClick={handleSave} disabled={saving} variant="primary">
-                {saving ? "Registering..." : "Register Asset"}
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

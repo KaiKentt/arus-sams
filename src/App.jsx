@@ -104,6 +104,7 @@ function App() {
               user={session}
               schoolId={userSchoolId}
               userRole={userRole}
+              navigate={navigate}
             />
           )}
           {currentTab === "mobile-audit" && <MobileAudit user={session} />}

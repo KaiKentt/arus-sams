@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
+import Card from "../../components/ui/Card";
+import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
+import Select from "../../components/ui/Select";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function EditAssetModal({
   schoolId,
@@ -38,7 +43,7 @@ export default function EditAssetModal({
         location_id: parseInt(locationId),
         status: status,
       })
-      .eq("asset_id", asset.asset_id); // Update by ID
+      .eq("asset_id", asset.asset_id);
 
     if (error) {
       alert("Error updating asset: " + error.message);
@@ -50,110 +55,79 @@ export default function EditAssetModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md overflow-y-auto max-h-[90vh]">
-        <h3 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-2 border-blue-500">
-          ✏️ Edit Asset Details
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Asset Tag ID
-            </label>
-            {/* Read-only because QR codes shouldn't change! */}
-            <input
-              type="text"
-              disabled
-              value={asset.asset_id}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 text-slate-500 font-mono cursor-not-allowed"
-            />
-          </div>
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 className="text-xl font-bold text-slate-800">Edit Asset Details</h3>
+          <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full transition-colors">
+            <XMarkIcon className="w-6 h-6 text-slate-500" />
+          </button>
+        </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Asset Name
-            </label>
-            <input
-              type="text"
-              required
-              value={assetName}
-              onChange={(e) => setAssetName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <Input
+            label="Asset Tag ID"
+            disabled
+            value={asset.asset_id}
+            className="font-mono bg-slate-100 cursor-not-allowed"
+          />
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="Electronics">Electronics</option>
-              <option value="Furniture">Furniture</option>
-              <option value="Network Equipment">Network Equipment</option>
-              <option value="Lab Equipment">Lab Equipment</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+          <Input
+            label="Asset Name"
+            required
+            value={assetName}
+            onChange={(e) => setAssetName(e.target.value)}
+            placeholder="Enter asset name"
+          />
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Location / Room
-            </label>
-            <select
-              value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white"
-              required
-            >
-              <option value="" disabled>
-                -- Select a Location --
+          <Select
+            label="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="Electronics">Electronics</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Network Equipment">Network Equipment</option>
+            <option value="Lab Equipment">Lab Equipment</option>
+            <option value="Other">Other</option>
+          </Select>
+
+          <Select
+            label="Location / Room"
+            value={locationId}
+            onChange={(e) => setLocationId(e.target.value)}
+            required
+          >
+            <option value="" disabled>Select a Location</option>
+            {locations.map((loc) => (
+              <option key={loc.location_id} value={loc.location_id}>
+                {loc.location_name}
               </option>
-              {locations.map((loc) => (
-                <option key={loc.location_id} value={loc.location_id}>
-                  {loc.location_name}
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </Select>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="Active">Active (Operational)</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-              <option value="Lost">Lost</option>
-              <option value="Disposed">Disposed</option>
-            </select>
-          </div>
+          <Select
+            label="Status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="Active">Operational</option>
+            <option value="Under Maintenance">Maintenance</option>
+            <option value="Broken">Broken</option>
+            <option value="Lost">Lost</option>
+            <option value="Disposed">Disposed</option>
+          </Select>
 
-          <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-slate-300 rounded-md text-sm font-bold text-slate-700 hover:bg-slate-50"
-            >
+          <div className="flex gap-3 mt-8 pt-4 border-t border-slate-100">
+            <Button onClick={onClose} variant="secondary" className="flex-1 py-2.5">
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 rounded-md text-sm font-bold text-white hover:bg-blue-700 shadow-md disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "💾 Save Changes"}
-            </button>
+            </Button>
+            <Button type="submit" disabled={loading} variant="primary" className="flex-1 py-2.5">
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

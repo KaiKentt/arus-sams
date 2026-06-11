@@ -14,7 +14,6 @@ import {
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import { supabase } from "../../supabaseClient";
-import AddAssetModal from "./AddAssetModal";
 import EditAssetModal from "./EditAssetModal";
 import AssetAnalytics from "./AssetAnalytics";
 import Card from "../../components/ui/Card";
