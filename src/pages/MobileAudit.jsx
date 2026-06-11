@@ -144,10 +144,10 @@ export default function MobileAudit({ user }) {
 
   useEffect(() => {
     if (inputTab !== 'camera' || asset) stopCamera()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [inputTab, asset])
 
-  useEffect(() => { return () => { stopCamera() } }, []) // eslint-disable-line
+  useEffect(() => { return () => { stopCamera() } }, [])  
 
   // ── Asset lookup ──────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useLocations, addLocation, getCumulativeElevation } from '../hooks/useLocations';
 import LocationTreeNode from '../components/LocationTreeNode';

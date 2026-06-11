@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export default function AlertBanner({ isCritical }) {
   if (!isCritical) return null;

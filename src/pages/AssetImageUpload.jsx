@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";

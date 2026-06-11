@@ -1,4 +1,4 @@
-import React from "react";
+
 
 export default function Badge({ children, variant = "neutral", icon: Icon }) {
   const baseStyle = "inline-flex items-center gap-1 whitespace-nowrap px-2 py-1 rounded text-xs font-bold uppercase tracking-wider border";

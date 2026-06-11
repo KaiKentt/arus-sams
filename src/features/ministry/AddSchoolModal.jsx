@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "../../supabaseClient";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";

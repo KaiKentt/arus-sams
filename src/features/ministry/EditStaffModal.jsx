@@ -1,5 +1,15 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { supabase } from "../../supabaseClient";
+import Card from "../../components/ui/Card";
+import Input from "../../components/ui/Input";
+import Select from "../../components/ui/Select";
+import Button from "../../components/ui/Button";
+import { 
+  PencilSquareIcon, 
+  CheckCircleIcon, 
+  ArrowPathIcon,
+  XMarkIcon
+} from "@heroicons/react/24/outline";
 
 export default function EditStaffModal({
   staff,
@@ -55,129 +65,141 @@ export default function EditStaffModal({
     }
   };
 
+  const roleOptions = [
+    { value: "headmaster", label: "Headmaster (School Admin)" },
+    { value: "standard_teacher", label: "Standard Teacher" },
+    { value: "asset_teacher", label: "Asset Management Teacher" },
+    { value: "superadmin", label: "Ministry (Super Admin)" }
+  ];
+
+  const schoolOptions = schools.map(school => ({
+    value: school.school_id,
+    label: `${school.school_name} (${school.school_code})`
+  }));
+
   return (
-    <div className="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md overflow-y-auto max-h-[90vh]">
-        <h3 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-2 border-blue-500">
-          ✏️ Edit System User
-        </h3>
-
-        {formError && (
-          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold">
-            {formError}
-          </div>
-        )}
-
-        <form onSubmit={handleUpdateStaff} className="space-y-4">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl relative fade-in flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+        {/* FIXED HEADER */}
+        <div className="p-8 pb-4 border-b border-slate-100 flex justify-between items-start bg-white z-20">
           <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-teal-50 rounded-lg border border-teal-100">
+                <PencilSquareIcon className="w-8 h-8 text-teal-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800">Edit System User</h2>
+            </div>
+            <p className="text-sm text-slate-500">Modify personnel details and system access permissions.</p>
           </div>
+          <button 
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              IC Number
-            </label>
-            <input
-              type="text"
-              required
-              value={icNumber}
-              onChange={(e) => setIcNumber(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              System Role
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="headmaster">Headmaster (School Admin)</option>
-              <option value="standard_teacher">Standard Teacher</option>
-              <option value="asset_teacher">Asset Management Teacher</option>
-              <option value="superadmin">Ministry (Super Admin)</option>
-            </select>
-          </div>
-
-          {role !== "superadmin" && (
-            <div>
-              <label className="block text-sm font-bold text-teal-700">
-                Assign to School
-              </label>
-              <select
-                value={schoolId}
-                onChange={(e) => setSchoolId(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-teal-500 rounded-md bg-teal-50"
-                required
-              >
-                <option value="" disabled>
-                  -- Select a School --
-                </option>
-                {schools.map((school) => (
-                  <option key={school.school_id} value={school.school_id}>
-                    {school.school_name} ({school.school_code})
-                  </option>
-                ))}
-              </select>
+        {/* SCROLLABLE CONTENT */}
+        <div className="flex-1 overflow-y-auto p-8 pt-6">
+          {formError && (
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold animate-shake">
+              {formError}
             </div>
           )}
 
-          <div className="border-t border-slate-200 pt-4 mt-4">
-            <label className="block text-sm font-bold text-slate-700">
-              Login Email (Cannot be changed)
-            </label>
-            <input
-              type="email"
-              disabled
-              value={staff.email}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-100 text-slate-500 cursor-not-allowed"
-            />
-          </div>
+          <form id="edit-staff-form" onSubmit={handleUpdateStaff} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Full Name"
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+              <Input
+                label="IC Number"
+                type="text"
+                required
+                value={icNumber}
+                onChange={(e) => setIcNumber(e.target.value)}
+              />
+              <Select
+                label="System Role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                options={roleOptions}
+                required
+              />
+              {role !== "superadmin" && (
+                <Select
+                  label="Assign to School"
+                  value={schoolId}
+                  onChange={(e) => setSchoolId(e.target.value)}
+                  options={[{ value: "", label: "-- Select a School --" }, ...schoolOptions]}
+                  required
+                  className="ring-1 ring-teal-100"
+                />
+              )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">
-              Account Password
-            </label>
-            <input
-              type="text"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              minLength={8}
-            />
-          </div>
+            <div className="border-t border-slate-100 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Input
+                    label="Login Email"
+                    type="email"
+                    disabled
+                    value={staff.email}
+                    className="bg-slate-50 text-slate-500 cursor-not-allowed border-slate-200"
+                  />
+                  <p className="mt-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Permanent ID</p>
+                </div>
+                <div>
+                  <Input
+                    label="Account Password"
+                    type="text"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={8}
+                    className="bg-red-50/30"
+                  />
+                  <p className="mt-1.5 text-[10px] font-bold text-red-400 uppercase tracking-widest">High-Security Field</p>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
 
-          <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-slate-300 rounded-md text-sm font-bold text-slate-700 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 rounded-md text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "💾 Save Changes"}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* FIXED FOOTER */}
+        <div className="p-8 pt-4 border-t border-slate-100 flex justify-end gap-3 bg-white z-20">
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            form="edit-staff-form"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckCircleIcon className="w-5 h-5" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

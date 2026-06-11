@@ -1,4 +1,4 @@
-import React from "react";
+
 
 /**
  * Reusable Textarea component for Arus-SAMS UI library.
