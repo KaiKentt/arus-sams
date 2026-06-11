@@ -1,10 +1,25 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import QRCode from "qrcode";
-import { QrCode, Download, Printer } from "lucide-react";
+import { 
+  QrCodeIcon, 
+  ArrowDownTrayIcon, 
+  PrinterIcon,
+  PlusIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  XMarkIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ArrowsUpDownIcon,
+  CheckCircleIcon
+} from "@heroicons/react/24/outline";
 import { supabase } from "../supabaseClient";
 import AddAssetModal from "../features/assets/AddAssetModal";
 import EditAssetModal from "../features/assets/EditAssetModal";
 import AssetAnalytics from "../features/assets/AssetAnalytics";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
 import {
   generateQrId,
   generateAndSaveQR,
@@ -26,9 +41,13 @@ function SortButton({ label, field, sortField, sortDir, onSort }) {
         {label}
       </span>
       <span
-        className={`text-xs ${active ? "text-teal-600" : "text-slate-300 group-hover:text-slate-400"}`}
+        className={`w-3 h-3 ${active ? "text-teal-600" : "text-slate-300 group-hover:text-slate-400"}`}
       >
-        {active ? (sortDir === "asc" ? "▲" : "▼") : "⇅"}
+        {active ? (
+          sortDir === "asc" ? <ChevronUpIcon /> : <ChevronDownIcon />
+        ) : (
+          <ArrowsUpDownIcon />
+        )}
       </span>
     </button>
   );
@@ -97,8 +116,8 @@ function QrModal({ asset, locationPath, schoolName, onClose }) {
           .qr-id { font-family: monospace; font-size: 13px; font-weight: bold; color: #000; margin-bottom: 3px; }
           .reg-no { font-size: 8px; color: #666; margin-bottom: 6px; word-break: break-all; }
           .asset-name { font-size: 10px; font-weight: bold; color: #111; margin-bottom: 2px; }
-          .location { font-size: 8px; color: #888; margin-bottom: 2px; }
-          .school { font-size: 8px; color: #888; }
+          .label-location { font-size: 8px; color: #888; margin-bottom: 2px; }
+          .label-school { font-size: 8px; color: #888; }
           @media print { body { background: white; } .label { border: 1px solid #ccc; } }
         </style>
       </head>
@@ -109,8 +128,8 @@ function QrModal({ asset, locationPath, schoolName, onClose }) {
           <div class="qr-id">${asset.qr_code_id}</div>
           <div class="reg-no">${asset.registration_no || "No Registration No."}</div>
           <div class="asset-name">${asset.asset_name}</div>
-          <div class="location">${locationPath}</div>
-          <div class="school">${schoolName}</div>
+          <div class="label-location">${locationPath}</div>
+          <div class="label-school">${schoolName}</div>
         </div>
         <script>
           window.onload = function() {
@@ -129,18 +148,15 @@ function QrModal({ asset, locationPath, schoolName, onClose }) {
       className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
           <h2 className="text-base font-bold text-slate-800">Asset QR Code</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 text-lg"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
           >
-            ✕
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -188,33 +204,35 @@ function QrModal({ asset, locationPath, schoolName, onClose }) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-3 mb-3">
-            <button
+          <div className="flex flex-col sm:flex-row gap-3 mb-3">
+            <Button
               onClick={handleDownload}
               disabled={!qrDataUrl}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="flex-1 py-2.5 text-sm"
             >
-              <Download size={15} />
+              <ArrowDownTrayIcon className="w-4 h-4" />
               Download PNG
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handlePrint}
               disabled={!qrDataUrl}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-sm disabled:opacity-50 transition-colors"
+              variant="secondary"
+              className="flex-1 py-2.5 text-sm"
             >
-              <Printer size={15} />
+              <PrinterIcon className="w-4 h-4" />
               Print Label
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button
             onClick={onClose}
-            className="w-full py-2.5 border border-slate-300 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-50"
+            variant="secondary"
+            className="w-full py-2.5 text-sm"
           >
             Close
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -455,54 +473,58 @@ export default function AssetMasterList({ schoolId, userRole }) {
     <div className="fade-in space-y-6 relative">
       {/* Toast */}
       {qrToast && (
-        <div className="fixed top-4 right-4 z-50 px-5 py-3 bg-teal-600 text-white text-sm font-bold rounded-xl shadow-lg animate-pulse">
-          ✓ {qrToast}
+        <div className="fixed top-4 right-4 z-50 px-5 py-3 bg-teal-600 text-white text-sm font-bold rounded-xl shadow-lg animate-pulse flex items-center gap-2">
+          <CheckCircleIcon className="w-5 h-5" />
+          {qrToast}
         </div>
       )}
 
       {/* Header bar */}
-      <div className="flex items-start justify-between gap-3 bg-white p-4 md:p-6 rounded-xl shadow-md border border-slate-200">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-800">
-            📦 Asset Master List
-          </h2>
-          <p className="text-slate-500 text-sm mt-1">
-            {canEdit
-              ? "Manage and track all physical assets registered to this school."
-              : "View all physical assets registered to this school."}
-          </p>
+      <Card className="p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+              Asset Master List
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">
+              {canEdit
+                ? "Manage and track all physical assets registered to this school."
+                : "View all physical assets registered to this school."}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {hasQrAssets && (
+              <Button
+                onClick={handleBulkPrint}
+                variant="secondary"
+                className="px-4 py-2.5 text-sm"
+              >
+                <PrinterIcon className="w-4 h-4" />
+                <span>Print All QR</span>
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                onClick={() => setIsAddModalOpen(true)}
+                className="px-4 py-2.5 text-sm"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Register New Asset
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-          {hasQrAssets && (
-            <button
-              onClick={handleBulkPrint}
-              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-bold shadow transition-colors text-sm"
-            >
-              <Printer size={14} />
-              <span className="hidden sm:inline">Print All QR</span>
-              <span className="sm:hidden">Print All</span>
-            </button>
-          )}
-          {canEdit && (
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-lg font-bold shadow transition-colors text-sm"
-            >
-              + Register New Asset
-            </button>
-          )}
-        </div>
-      </div>
+      </Card>
 
-      <AssetAnalytics assets={assets} title="📊 School Asset Health Overview" />
+      <AssetAnalytics assets={assets} title="School Asset Health Overview" />
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+      <Card>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-100">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left">
+                <th className="px-6 py-4 text-left">
                   <SortButton
                     label="Tag ID (QR)"
                     field="qr_code_id"
@@ -511,7 +533,7 @@ export default function AssetMasterList({ schoolId, userRole }) {
                     onSort={handleSort}
                   />
                 </th>
-                <th className="px-6 py-3 text-left">
+                <th className="px-6 py-4 text-left">
                   <SortButton
                     label="Asset Name"
                     field="asset_name"
@@ -520,20 +542,20 @@ export default function AssetMasterList({ schoolId, userRole }) {
                     onSort={handleSort}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Location
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Usage
                 </th>
                 {canEdit && (
-                  <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Actions
                   </th>
                 )}
@@ -544,7 +566,7 @@ export default function AssetMasterList({ schoolId, userRole }) {
                 <tr>
                   <td
                     colSpan={colSpan}
-                    className="px-6 py-8 text-center text-slate-500"
+                    className="px-6 py-12 text-center text-slate-500"
                   >
                     No assets found for this school.
                   </td>
@@ -552,21 +574,26 @@ export default function AssetMasterList({ schoolId, userRole }) {
               ) : (
                 sortedAssets.map((asset) => {
                   const usage = lastUsageMap[asset.asset_id];
+                  
+                  // Status to Badge Variant mapping
+                  let statusVariant = "neutral";
+                  if (asset.status === "Active") statusVariant = "active";
+                  else if (asset.status === "Under Maintenance") statusVariant = "warning";
+                  else if (asset.status === "Lost" || asset.status === "Disposed") statusVariant = "danger";
+
                   return (
-                    <tr key={asset.asset_id} className="hover:bg-slate-50">
+                    <tr key={asset.asset_id} className="hover:bg-slate-50 transition-colors">
                       {/* QR ID — clickable to open modal */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {asset.qr_code_id ? (
                           <button
                             onClick={() => setQrModalAsset(asset)}
-                            className="font-mono font-bold text-teal-600 hover:underline hover:text-teal-700 text-left"
+                            className="font-mono font-bold text-teal-600 hover:text-teal-700 transition-colors"
                           >
                             {asset.qr_code_id}
                           </button>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
-                            No QR
-                          </span>
+                          <Badge variant="warning">No QR</Badge>
                         )}
                       </td>
 
@@ -576,10 +603,10 @@ export default function AssetMasterList({ schoolId, userRole }) {
                       </td>
 
                       {/* Category */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                        <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Badge variant="neutral">
                           {asset.category || "Uncategorized"}
-                        </span>
+                        </Badge>
                       </td>
 
                       {/* Location */}
@@ -589,37 +616,19 @@ export default function AssetMasterList({ schoolId, userRole }) {
 
                       {/* Lifecycle Status */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            asset.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : asset.status === "Under Maintenance"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : asset.status === "Lost"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : asset.status === "Disposed"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-slate-100 text-slate-800"
-                          }`}
-                        >
+                        <Badge variant={statusVariant}>
                           {asset.status || "Unknown"}
-                        </span>
+                        </Badge>
                       </td>
 
                       {/* Usage Status (from last audit) */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {usage ? (
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              usage === "In Use"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
+                          <Badge variant={usage === "In Use" ? "brand" : "neutral"}>
                             {usage}
-                          </span>
+                          </Badge>
                         ) : (
-                          <span className="text-xs text-slate-300 italic">
+                          <span className="text-xs text-slate-400 italic">
                             Not audited
                           </span>
                         )}
@@ -627,33 +636,34 @@ export default function AssetMasterList({ schoolId, userRole }) {
 
                       {/* Actions */}
                       {canEdit && (
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-1">
                             {asset.qr_code_id ? (
                               <button
                                 onClick={() => setQrModalAsset(asset)}
                                 title="View / Print QR Code"
-                                className="p-1.5 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
+                                className="p-2 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
                               >
-                                <QrCode size={16} />
+                                <QrCodeIcon className="w-5 h-5" />
                               </button>
                             ) : (
-                              <button
+                              <Button
                                 onClick={() => handleGenerateQR(asset.asset_id)}
                                 disabled={generatingQrFor === asset.asset_id}
-                                className="text-xs px-2 py-1 rounded bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100 disabled:opacity-50"
+                                variant="secondary"
+                                className="px-3 py-1.5 text-xs h-8"
                               >
                                 {generatingQrFor === asset.asset_id
                                   ? "..."
                                   : "Generate QR"}
-                              </button>
+                              </Button>
                             )}
                             <button
                               onClick={() => setEditingAsset(asset)}
-                              className="text-xl hover:scale-110 transition-transform"
+                              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
                               title="Edit"
                             >
-                              ✏️
+                              <PencilSquareIcon className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() =>
@@ -662,10 +672,10 @@ export default function AssetMasterList({ schoolId, userRole }) {
                                   asset.asset_name,
                                 )
                               }
-                              className="text-xl hover:scale-110 transition-transform"
+                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                               title="Delete"
                             >
-                              🗑️
+                              <TrashIcon className="w-5 h-5" />
                             </button>
                           </div>
                         </td>
@@ -677,7 +687,7 @@ export default function AssetMasterList({ schoolId, userRole }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Modals */}
       {isAddModalOpen && (
