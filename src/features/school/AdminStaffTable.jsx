@@ -63,8 +63,15 @@ export default function AdminStaffTable({ staffList, onEdit, onDelete }) {
                     <p className="font-mono text-slate-400 text-[10px] mt-1.5 uppercase tracking-tighter italic">IC: {staff.ic_number}</p>
                   </td>
                   <td className="p-4 align-middle">
-                    <Badge variant={staff.role === "asset_teacher" ? "brand" : "neutral"}>
-                      {staff.role === "asset_teacher" ? "Asset Field Ops" : "Classroom Standard"}
+                    <Badge variant={
+                      staff.role === "asset_teacher" ? "brand" :
+                      staff.role === "headmaster" ? "active" :
+                      staff.role === "superadmin" ? "danger" : "neutral"
+                    }>
+                      {staff.role === "asset_teacher" ? "Asset Field Ops" :
+                       staff.role === "headmaster" ? "Headmaster" :
+                       staff.role === "superadmin" ? "Super Admin" :
+                       "Classroom Standard"}
                     </Badge>
                   </td>
                   <td className="p-4 align-middle text-right">
