@@ -99,21 +99,23 @@ export default function StaffTable({ globalStaff, onEdit, onDelete }) {
                       </span>
                     )}
                   </td>
-                  <td className="p-4 pr-6 text-right space-x-2">
-                    <button
-                      onClick={() => onEdit(staff)}
-                      className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                      title="Edit User"
-                    >
-                      <PencilSquareIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(staff.id || staff.staff_id || `staff-${index}`, staff.full_name)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Revoke Access"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
+                  <td className="p-4 pr-6 text-right">
+                    <div className="flex justify-end items-center gap-1">
+                      <button
+                        onClick={() => onEdit(staff)}
+                        className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        title="Edit User"
+                      >
+                        <PencilSquareIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(staff.id || staff.staff_id || `staff-${index}`, staff.full_name)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Revoke Access"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

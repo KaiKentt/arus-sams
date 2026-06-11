@@ -83,21 +83,23 @@ export default function SchoolsTable({ schools, onEdit, onDelete }) {
                   <td className="p-4 text-sm text-slate-600">
                     {school.contact_no || "N/A"}
                   </td>
-                  <td className="p-4 pr-6 text-right space-x-2">
-                    <button
-                      onClick={() => onEdit(school)}
-                      className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-                      title="Edit School"
-                    >
-                      <PencilSquareIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(school.school_id, school.school_name)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete School"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
+                  <td className="p-4 pr-6 text-right">
+                    <div className="flex justify-end items-center gap-1">
+                      <button
+                        onClick={() => onEdit(school)}
+                        className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        title="Edit School"
+                      >
+                        <PencilSquareIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(school.school_id, school.school_name)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete School"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

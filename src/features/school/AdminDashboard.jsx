@@ -121,7 +121,6 @@ const AdminDashboard = ({ schoolId, onNavigate }) => {
         {activeTab === "manage" && (
           <AdminStaffTable 
             staffList={staffList} 
-            schoolName={schoolName} 
             onEdit={triggerEditMode} 
             onDelete={handleDeleteStaff} 
           />
