@@ -153,17 +153,17 @@ const UserProfile = ({ session, onSessionUpdate }) => {
   if (!profile) return <div className="p-8 text-red-500">Error: Could not load profile data.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 fade-in">
+    <div className="max-w-3xl mx-auto space-y-4 fade-in">
 
       {/* ── MAIN PROFILE CARD ── */}
-      <div className="bg-white p-8 rounded-xl shadow border border-slate-200">
+      <div className="bg-white p-4 md:p-8 rounded-xl shadow border border-slate-200">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-          <h2 className="text-2xl font-bold text-slate-800">My Personal Profile</h2>
+        <div className="flex justify-between items-center mb-4 md:mb-6 border-b border-slate-100 pb-4">
+          <h2 className="text-lg md:text-2xl font-bold text-slate-800">My Personal Profile</h2>
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="bg-slate-100 text-slate-600 hover:bg-teal-50 hover:text-teal-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors border border-slate-200"
+              className="bg-slate-100 text-slate-600 hover:bg-teal-50 hover:text-teal-700 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold text-xs md:text-sm transition-colors border border-slate-200 whitespace-nowrap"
             >
               📷 Change Picture
             </button>
@@ -171,17 +171,17 @@ const UserProfile = ({ session, onSessionUpdate }) => {
         </div>
 
         {/* Avatar + Name */}
-        <div className="flex items-center space-x-6 mb-8">
+        <div className="flex items-center space-x-4 mb-6">
           {profile.profile_pic ? (
-            <img src={profile.profile_pic} alt="Profile" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 shadow-sm" />
+            <img src={profile.profile_pic} alt="Profile" className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover border-4 border-slate-100 shadow-sm flex-shrink-0" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-4xl border-4 border-slate-100 shadow-sm">
+            <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-3xl md:text-4xl border-4 border-slate-100 shadow-sm flex-shrink-0">
               {profile.full_name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="flex-1">
-            <h3 className="text-3xl font-bold text-slate-800">{profile.full_name}</h3>
-            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold capitalize
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xl md:text-3xl font-bold text-slate-800 truncate">{profile.full_name}</h3>
+            <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold capitalize
               ${profile.role === "superadmin" ? "bg-purple-100 text-purple-700"
                 : profile.role === "headmaster" ? "bg-amber-100 text-amber-700"
                 : "bg-teal-100 text-teal-700"}`}>
@@ -215,22 +215,22 @@ const UserProfile = ({ session, onSessionUpdate }) => {
         )}
 
         {/* Info grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-slate-50 p-3 md:p-4 rounded-lg border border-slate-100 min-w-0">
             <p className="text-xs font-bold text-slate-400 uppercase mb-1 tracking-wider">Email Address</p>
-            <p className="text-slate-800 font-medium">{profile.email}</p>
+            <p className="text-slate-800 font-medium text-sm truncate" title={profile.email}>{profile.email}</p>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+          <div className="bg-slate-50 p-3 md:p-4 rounded-lg border border-slate-100">
             <p className="text-xs font-bold text-slate-400 uppercase mb-1 tracking-wider">Phone Number</p>
-            <p className="text-slate-800 font-medium">{profile.phone_no}</p>
+            <p className="text-slate-800 font-medium text-sm">{profile.phone_no}</p>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+          <div className="bg-slate-50 p-3 md:p-4 rounded-lg border border-slate-100">
             <p className="text-xs font-bold text-slate-400 uppercase mb-1 tracking-wider">IC Number</p>
-            <p className="text-slate-800 font-mono">{profile.ic_number}</p>
+            <p className="text-slate-800 font-mono text-sm">{profile.ic_number}</p>
           </div>
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+          <div className="bg-slate-50 p-3 md:p-4 rounded-lg border border-slate-100">
             <p className="text-xs font-bold text-slate-400 uppercase mb-1 tracking-wider">Assigned Institution</p>
-            <p className="text-slate-800 font-medium">
+            <p className="text-slate-800 font-medium text-sm">
               {profile.school_id
                 ? `${schoolInfo.name || "Loading..."} (${schoolInfo.code || "..."})`
                 : "Ministry Level (Superadmin)"}
@@ -244,7 +244,7 @@ const UserProfile = ({ session, onSessionUpdate }) => {
         {/* Section header — always visible, acts as toggle */}
         <button
           onClick={() => showPasswordSection ? cancelPasswordChange() : setShowPasswordSection(true)}
-          className="w-full flex items-center justify-between px-8 py-5 hover:bg-slate-50 transition-colors"
+          className="w-full flex items-center justify-between px-4 md:px-8 py-4 md:py-5 hover:bg-slate-50 transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">
@@ -262,7 +262,7 @@ const UserProfile = ({ session, onSessionUpdate }) => {
 
         {/* Expandable form */}
         {showPasswordSection && (
-          <div className="px-8 pb-8 border-t border-slate-100">
+          <div className="px-4 md:px-8 pb-4 md:pb-8 border-t border-slate-100">
 
             {/* Success state */}
             {pwSuccess ? (

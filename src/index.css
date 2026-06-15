@@ -13,5 +13,20 @@
 @layer base {
   html, body {
     font-family: var(--font-sans);
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Disable double-tap zoom and tap highlight on all elements */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    box-sizing: border-box;
+  }
+
+  /* Re-allow normal scrolling on scroll containers */
+  [data-scroll], .overflow-y-auto, .overflow-y-scroll {
+    touch-action: pan-y;
   }
 }
