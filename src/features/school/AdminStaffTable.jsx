@@ -54,10 +54,10 @@ export default function AdminStaffTable({ staffList, onEdit, onDelete }) {
                       </div>
                     )}
                   </td>
-                  <td className="p-4 align-middle">
-                    <p className="font-bold text-slate-800 text-base">{staff.full_name}</p>
+                  <td className="p-4 align-middle max-w-[200px] md:max-w-xs">
+                    <p className="font-bold text-slate-800 text-base truncate">{staff.full_name}</p>
                     <div className="flex flex-col gap-0.5 mt-1">
-                      <p className="text-slate-500 text-xs">{staff.email}</p>
+                      <p className="text-slate-500 text-xs truncate" title={staff.email}>{staff.email}</p>
                       <p className="text-slate-400 text-xs">{staff.phone_no}</p>
                     </div>
                     <p className="font-mono text-slate-400 text-[10px] mt-1.5 uppercase tracking-tighter italic">IC: {staff.ic_number}</p>
