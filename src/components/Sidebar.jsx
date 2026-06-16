@@ -16,6 +16,24 @@ import {
 
 const NAV_ITEMS = [
   {
+    id: "super-dashboard",
+    label: "Ministry Portal",
+    icon: ShieldCheckIcon,
+    allowedRoles: ["superadmin"]
+  },
+    {
+    id: "asset-master-list",
+    label: "Master Asset List",
+    icon: ArchiveBoxIcon,
+    allowedRoles: ["headmaster", "asset_teacher", "standard_teacher"]
+  }, 
+  {
+    id: "asset-registration",
+    label: "Asset Registration",
+    icon: PencilSquareIcon,
+    allowedRoles: ["headmaster", "asset_teacher"]
+  },
+  {
     id: "locations",
     label: "Location Manager",
     icon: MapPinIcon,
@@ -27,12 +45,14 @@ const NAV_ITEMS = [
     icon: QrCodeIcon,
     allowedRoles: ["headmaster", "asset_teacher"]
   },
+  /*
   {
     id: "hydrological-simulator",
     label: "iHYDRO Simulation Panel",
     icon: VariableIcon,
     allowedRoles: ["superadmin", "headmaster"]
   },
+  */
   {
     id: "school",
     label: "School Profile",
@@ -45,24 +65,6 @@ const NAV_ITEMS = [
     icon: UsersIcon,
     allowedRoles: ["headmaster"],
     hasDivider: true
-  },
-  {
-    id: "asset-master-list",
-    label: "Master Asset List",
-    icon: ArchiveBoxIcon,
-    allowedRoles: ["headmaster", "asset_teacher", "standard_teacher"]
-  },
-  {
-    id: "asset-registration",
-    label: "Asset Registration",
-    icon: PencilSquareIcon,
-    allowedRoles: ["headmaster", "asset_teacher"]
-  },
-  {
-    id: "super-dashboard",
-    label: "Ministry Portal",
-    icon: ShieldCheckIcon,
-    allowedRoles: ["superadmin"]
   }
 ];
 
