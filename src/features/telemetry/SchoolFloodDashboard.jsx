@@ -11,11 +11,13 @@ import {
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
+import EvacuationTracker from "./EvacuationTracker";
 
 export default function SchoolFloodDashboard({ schoolId, userRole }) {
   const [telemetry, setTelemetry] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -122,6 +124,35 @@ export default function SchoolFloodDashboard({ schoolId, userRole }) {
     }
   };
 
+  //call the function in Supabase to generate the evacuation plan for the school
+  const handleGenerateEvacuationPlan = async () => {
+    const confirmTrigger = window.confirm(
+      "CRITICAL ACTION: Are you sure you want to trigger the flood evacuation plan? This will immediately notify teachers and assign assets to safe rooms."
+    );
+    if (!confirmTrigger) return;
+
+    setIsGeneratingPlan(true);
+    try {
+      const { data, error } = await supabase.rpc('generate_evacuation_plan', {
+        p_school_id: schoolId
+      });
+
+      if (error) throw error;
+      
+      alert("Evacuation Plan generated successfully! Ground staff can now view their tasks.");
+      console.log("Generated Plan:", data);
+
+      // Add this line to force the tracker component to fetch the new data
+      window.dispatchEvent(new Event("evacuation_generated"));
+      
+    } catch (error) {
+      console.error("Failed to generate evacuation plan:", error);
+      alert("Failed to generate plan: " + error.message);
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
+
   // Helper function to color-code the UI based on the database status using Heroicons
   const getStatusStyles = (status) => {
     switch (status) {
@@ -197,17 +228,30 @@ export default function SchoolFloodDashboard({ schoolId, userRole }) {
           Early Warning Telemetry
         </h3>
 
+
         {userRole === "headmaster" && (
-          <Button
-            variant="secondary"
-            onClick={handleForceSync}
-            disabled={isSyncing || loading}
-          >
-            <ArrowPathIcon
-              className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-            />
-            {isSyncing ? "Syncing..." : "Force Sync"}
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="danger"
+              onClick={handleGenerateEvacuationPlan}
+              disabled={isGeneratingPlan || loading}
+              className="shadow-md shadow-red-600/20"
+            >
+              <ShieldExclamationIcon className={`w-5 h-5 ${isGeneratingPlan ? "animate-pulse" : ""}`} />
+              {isGeneratingPlan ? "Generating Plan..." : "Confirm Evacuation"}
+            </Button>
+            
+            <Button
+              variant="secondary"
+              onClick={handleForceSync}
+              disabled={isSyncing || loading}
+            >
+              <ArrowPathIcon
+                className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing..." : "Force Sync"}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -262,6 +306,7 @@ export default function SchoolFloodDashboard({ schoolId, userRole }) {
           );
         })}
       </div>
+      <EvacuationTracker schoolId={schoolId} />
     </div>
   );
 }
