@@ -93,7 +93,11 @@ src/
       LocalStaffRoster.jsx
       SchoolCommandCenter.jsx
     telemetry/
+      DashboardHeader.jsx
+      EvacuationTracker.jsx
       SchoolFloodDashboard.jsx
+      TelemetryCard.jsx
+      useFloodDashboard.js
   hooks/
     useArusAuth.js
     useAssets.js
@@ -176,6 +180,231 @@ This section contains the contents of the repository's files.
 
 <file path="src/assets/vite.svg">
 <svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
+</file>
+
+<file path="src/features/telemetry/DashboardHeader.jsx">
+import { SignalIcon, ShieldExclamationIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import Button from "../../components/ui/Button";
+
+export default function DashboardHeader({ 
+  userRole, 
+  loading, 
+  isSyncing, 
+  isGeneratingPlan, 
+  onGeneratePlan, 
+  onForceSync 
+}) {
+  return (
+    <div className="flex justify-between items-center mb-6">
+      <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+        <SignalIcon className="w-6 h-6 text-teal-600" />
+        Early Warning Telemetry
+      </h3>
+
+      {userRole === "headmaster" && (
+        <div className="flex gap-3">
+          <Button
+            variant="danger"
+            onClick={onGeneratePlan}
+            disabled={isGeneratingPlan || loading}
+            className="shadow-md shadow-red-600/20"
+          >
+            <ShieldExclamationIcon className={`w-5 h-5 ${isGeneratingPlan ? "animate-pulse" : ""}`} />
+            {isGeneratingPlan ? "Generating Plan..." : "Confirm Evacuation"}
+          </Button>
+          
+          <Button
+            variant="secondary"
+            onClick={onForceSync}
+            disabled={isSyncing || loading}
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+            {isSyncing ? "Syncing..." : "Force Sync"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="src/features/telemetry/TelemetryCard.jsx">
+import Card from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
+import { CheckCircleIcon, ExclamationTriangleIcon, ShieldExclamationIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+
+export default function TelemetryCard({ node }) {
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case "normal":
+        return { bg: "bg-emerald-50", text: "text-emerald-800", border: "border-emerald-200", variant: "active", icon: CheckCircleIcon };
+      case "alert":
+        return { bg: "bg-yellow-50", text: "text-yellow-800", border: "border-yellow-200", variant: "warning", icon: ExclamationTriangleIcon };
+      case "warning":
+        return { bg: "bg-orange-50", text: "text-orange-800", border: "border-orange-200", variant: "warning", icon: ExclamationTriangleIcon };
+      case "danger":
+        return { bg: "bg-red-50", text: "text-red-800", border: "border-red-300", variant: "danger", icon: ShieldExclamationIcon };
+      default:
+        return { bg: "bg-slate-50", text: "text-slate-600", border: "border-slate-200", variant: "neutral", icon: ExclamationCircleIcon };
+    }
+  };
+
+  const style = getStatusStyles(node.status);
+
+  return (
+    <Card className={`relative p-6 !overflow-visible border-t-4 ${style.bg} ${style.border} transition-all hover:shadow-md`}>
+      <div className="absolute -top-3 -left-3 shadow-md rounded">
+        <Badge variant="brand">#{node.priority}</Badge>
+      </div>
+
+      <div className="flex justify-between items-start mb-4 mt-2">
+        <h4 className="font-bold text-slate-900 text-lg leading-tight pr-4">
+          {node.stationName}
+        </h4>
+        <style.icon className={`w-6 h-6 ${style.text}`} />
+      </div>
+
+      <div className="mt-6 flex items-end justify-between">
+        <div>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Current Level
+          </p>
+          <p className={`text-4xl font-black ${style.text}`}>
+            {node.currentLevel} <span className="text-lg font-bold opacity-60">m</span>
+          </p>
+        </div>
+
+        <div className="text-right">
+          <p className="text-xs font-bold text-slate-400 uppercase">
+            Danger: {node.dangerLevel}m
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-black/5 flex justify-between items-center">
+        <Badge variant={style.variant} icon={style.icon}>
+          {node.status}
+        </Badge>
+        <span className="text-[10px] font-bold text-slate-500 uppercase">
+          Updated: {node.lastUpdated}
+        </span>
+      </div>
+    </Card>
+  );
+}
+</file>
+
+<file path="src/features/telemetry/useFloodDashboard.js">
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../../supabaseClient";
+
+export function useFloodDashboard(schoolId) {
+  const [telemetry, setTelemetry] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: mappings, error: mapError } = await supabase
+        .from("school_station")
+        .select(`priority, stations (station_id, station_name, danger_level)`)
+        .eq("school_id", schoolId)
+        .order("priority", { ascending: true });
+
+      if (mapError) throw mapError;
+
+      const enrichedData = await Promise.all(
+        mappings.map(async (mapping) => {
+          const station = mapping.stations;
+          const { data: waterData } = await supabase
+            .from("water_data")
+            .select("water_level, status, recorded_at")
+            .eq("station_id", station.station_id)
+            .order("recorded_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          return {
+            priority: mapping.priority,
+            stationName: station.station_name,
+            dangerLevel: station.danger_level,
+            currentLevel: waterData ? waterData.water_level : "N/A",
+            status: waterData ? waterData.status : "unknown",
+            lastUpdated: waterData
+              ? new Date(waterData.recorded_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Never",
+          };
+        }),
+      );
+      setTelemetry(enrichedData);
+    } catch (error) {
+      console.error("Error fetching telemetry:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+
+  useEffect(() => {
+    if (schoolId) fetchDashboardData();
+  }, [schoolId, fetchDashboardData]);
+
+  const handleForceSync = async () => {
+    setIsSyncing(true);
+    try {
+      await supabase.from("schools").update({ sync_requested: true }).eq("school_id", schoolId);
+      let isPythonDone = false;
+      let attempts = 0;
+      
+      while (!isPythonDone && attempts < 10) { 
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const { data } = await supabase.from("schools").select("sync_requested").eq("school_id", schoolId).single();
+        if (data && data.sync_requested === false) isPythonDone = true; 
+        attempts++;
+      }
+      await fetchDashboardData();
+    } catch (error) {
+      console.error("Manual sync failed:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleGenerateEvacuationPlan = async () => {
+    const confirmTrigger = window.confirm(
+      "CRITICAL ACTION: Are you sure you want to trigger the flood evacuation plan? This will immediately notify teachers and assign assets to safe rooms."
+    );
+    if (!confirmTrigger) return;
+
+    setIsGeneratingPlan(true);
+    try {
+      const { data, error } = await supabase.rpc("generate_evacuation_plan", { p_school_id: schoolId });
+      if (error) throw error;
+      
+      alert("Evacuation Plan generated successfully! Ground staff can now view their tasks.");
+      console.log("Generated Plan:", data);
+      window.dispatchEvent(new Event("evacuation_generated"));
+    } catch (error) {
+      console.error("Failed to generate evacuation plan:", error);
+      alert("Failed to generate plan: " + error.message);
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
+
+  return {
+    telemetry,
+    loading,
+    isSyncing,
+    isGeneratingPlan,
+    handleForceSync,
+    handleGenerateEvacuationPlan,
+  };
+}
 </file>
 
 <file path="src/App.css">
@@ -688,6 +917,139 @@ export default function UpdatePassword({ navigate }) {
 
 <file path="src/features/school/LocalStaffRoster.jsx">
 
+</file>
+
+<file path="src/features/telemetry/EvacuationTracker.jsx">
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../../supabaseClient";
+import Card from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
+import { ArrowPathIcon, CheckCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
+
+export default function EvacuationTracker({ schoolId }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("evacuation_orders")
+        .select(`
+          order_id,
+          priority_rank,
+          status,
+          assets ( asset_name )
+        `)
+        .eq("school_id", schoolId)
+        .order("priority_rank", { ascending: true });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error("Error fetching evacuation orders:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+
+  // Fetch orders when the component loads or school changes
+  useEffect(() => {
+    if (schoolId) {
+      fetchOrders();
+    }
+  }, [schoolId, fetchOrders]);
+
+  // Listen for the custom event triggered by the Headmaster's button
+  useEffect(() => {
+    const handleCustomEvent = () => fetchOrders();
+    window.addEventListener("evacuation_generated", handleCustomEvent);
+    return () => window.removeEventListener("evacuation_generated", handleCustomEvent);
+  }, [fetchOrders]);
+
+  if (loading && orders.length === 0) {
+    return (
+      <div className="mt-8 p-4 text-center text-slate-500 animate-pulse font-medium">
+        Loading live evacuation status...
+      </div>
+    );
+  }
+
+  // Hide the tracker completely if no evacuation plan exists yet
+  if (orders.length === 0) {
+    return null; 
+  }
+
+  const completedCount = orders.filter((o) => o.status === "evacuated").length;
+  const progress = Math.round((completedCount / orders.length) * 100) || 0;
+
+  return (
+    <div className="mt-12">
+      <div className="flex justify-between items-end mb-4">
+        <div>
+          <h3 className="text-xl font-bold text-slate-800">
+            Live Evacuation Tracker
+          </h3>
+          <p className="text-sm text-slate-500 mt-1">
+            Monitoring mobile app updates from ground staff.
+          </p>
+        </div>
+        <Button variant="secondary" onClick={fetchOrders} disabled={loading}>
+          <ArrowPathIcon className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          {loading ? "Refreshing..." : "Refresh Status"}
+        </Button>
+      </div>
+
+      <Card className="p-0 overflow-hidden border-t-4 border-slate-800">
+        {/* Progress Bar */}
+        <div className="bg-slate-100 w-full h-3">
+          <div 
+            className="bg-emerald-500 h-3 transition-all duration-500" 
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 text-xs font-bold text-slate-500 uppercase">Priority</th>
+                <th className="p-4 text-xs font-bold text-slate-500 uppercase">Asset Name</th>
+                <th className="p-4 text-xs font-bold text-slate-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {orders.map((order) => (
+                <tr key={order.order_id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="p-4 w-24">
+                    <span className="font-mono font-bold text-slate-400">
+                      #{order.priority_rank}
+                    </span>
+                  </td>
+                  <td className="p-4 font-medium text-slate-900">
+                    {order.assets?.asset_name || "Unknown Asset"}
+                  </td>
+                  <td className="p-4 w-48">
+                    {order.status === "evacuated" ? (
+                      <Badge variant="success" icon={CheckCircleIcon}>
+                        Evacuated
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning" icon={ClockIcon}>
+                        Pending Rescue
+                      </Badge>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
 </file>
 
 <file path="src/hooks/useLocations.js">
@@ -3241,276 +3603,6 @@ export default function SchoolCommandCenter({ session }) {
 }
 </file>
 
-<file path="src/features/telemetry/SchoolFloodDashboard.jsx">
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../../supabaseClient";
-import {
-  SignalIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  ShieldExclamationIcon,
-  ExclamationCircleIcon,
-  ArrowPathIcon,
-} from "@heroicons/react/24/outline";
-import Card from "../../components/ui/Card";
-import Badge from "../../components/ui/Badge";
-import Button from "../../components/ui/Button";
-
-export default function SchoolFloodDashboard({ schoolId, userRole }) {
-  const [telemetry, setTelemetry] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      // 1. Fetch the 3 mapped stations for this specific school using the standard client
-      const { data: mappings, error: mapError } = await supabase
-        .from("school_station")
-        .select(
-          `
-          priority,
-          stations (
-            station_id,
-            station_name,
-            danger_level
-          )
-        `,
-        )
-        .eq("school_id", schoolId)
-        .order("priority", { ascending: true });
-
-      if (mapError) throw mapError;
-
-      // 2. For each station, fetch the SINGLE most recent reading from water_data
-      const enrichedData = await Promise.all(
-        mappings.map(async (mapping) => {
-          const station = mapping.stations;
-
-          // Use the standard client here as well
-          const { data: waterData } = await supabase
-            .from("water_data")
-            .select("water_level, status, recorded_at")
-            .eq("station_id", station.station_id)
-            .order("recorded_at", { ascending: false })
-            .limit(1)
-            .single(); // We only want the absolute latest row
-
-          return {
-            priority: mapping.priority,
-            stationName: station.station_name,
-            dangerLevel: station.danger_level,
-            // If the python script hasn't run yet, default to N/A
-            currentLevel: waterData ? waterData.water_level : "N/A",
-            status: waterData ? waterData.status : "unknown",
-            lastUpdated: waterData
-              ? new Date(waterData.recorded_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "Never",
-          };
-        }),
-      );
-
-      setTelemetry(enrichedData);
-    } catch (error) {
-      console.error("Error fetching telemetry:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [schoolId]);
-
-  useEffect(() => {
-    if (schoolId) {
-      fetchDashboardData();
-    }
-  }, [schoolId, fetchDashboardData]);
-
-  const handleForceSync = async () => {
-    setIsSyncing(true);
-    try {
-      // 1. Flip the switch to tell Python to start
-      await supabase
-        .from('schools')
-        .update({ sync_requested: true })
-        .eq('school_id', schoolId);
-
-      // 2. Smart Polling: Check every 2 seconds if Python finished
-      let isPythonDone = false;
-      let attempts = 0;
-      
-      while (!isPythonDone && attempts < 10) { // Max 20 seconds wait
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const { data } = await supabase
-          .from('schools')
-          .select('sync_requested')
-          .eq('school_id', schoolId)
-          .single();
-          
-        if (data && data.sync_requested === false) {
-          isPythonDone = true; // Python flipped it back!
-        }
-        attempts++;
-      }
-
-      // 3. Python is done! Fetch the fresh data
-      await fetchDashboardData();
-      
-    } catch (error) {
-      console.error("Manual sync failed:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Helper function to color-code the UI based on the database status using Heroicons
-  const getStatusStyles = (status) => {
-    switch (status) {
-      case "normal":
-        return {
-          bg: "bg-emerald-50",
-          text: "text-emerald-800",
-          border: "border-emerald-200",
-          variant: "active",
-          icon: CheckCircleIcon,
-        };
-      case "alert":
-        return {
-          bg: "bg-yellow-50",
-          text: "text-yellow-800",
-          border: "border-yellow-200",
-          variant: "warning",
-          icon: ExclamationTriangleIcon,
-        };
-      case "warning":
-        return {
-          bg: "bg-orange-50",
-          text: "text-orange-800",
-          border: "border-orange-200",
-          variant: "warning",
-          icon: ExclamationTriangleIcon,
-        };
-      case "danger":
-        return {
-          bg: "bg-red-50",
-          text: "text-red-800",
-          border: "border-red-300",
-          variant: "danger",
-          icon: ShieldExclamationIcon,
-        };
-      default:
-        return {
-          bg: "bg-slate-50",
-          text: "text-slate-600",
-          border: "border-slate-200",
-          variant: "neutral",
-          icon: ExclamationCircleIcon,
-        };
-    }
-  };
-
-  if (loading && !isSyncing) {
-    return (
-      <div className="p-4 text-center text-slate-500 animate-pulse font-medium">
-        Loading live iHYDRO telemetry...
-      </div>
-    );
-  }
-
-  if (telemetry.length === 0) {
-    return (
-      <Card className="p-8 text-center bg-slate-50 border-dashed">
-        <p className="text-slate-600 font-bold mb-1">
-          No telemetry stations are currently mapped to this school.
-        </p>
-        <p className="text-sm text-slate-500">
-          Update the school's coordinates to assign stations.
-        </p>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-          <SignalIcon className="w-6 h-6 text-teal-600" />
-          Early Warning Telemetry
-        </h3>
-
-        {userRole === "headmaster" && (
-          <Button
-            variant="secondary"
-            onClick={handleForceSync}
-            disabled={isSyncing || loading}
-          >
-            <ArrowPathIcon
-              className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-            />
-            {isSyncing ? "Syncing..." : "Force Sync"}
-          </Button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {telemetry.map((node) => {
-          const style = getStatusStyles(node.status);
-
-          return (
-            <Card
-              key={node.priority}
-              className={`relative p-6 !overflow-visible border-t-4 ${style.bg} ${style.border} transition-all hover:shadow-md`}
-            >
-              {/* Priority Badge */}
-              <div className="absolute -top-3 -left-3 shadow-md rounded">
-                <Badge variant="brand">#{node.priority}</Badge>
-              </div>
-
-              <div className="flex justify-between items-start mb-4 mt-2">
-                <h4 className="font-bold text-slate-900 text-lg leading-tight pr-4">
-                  {node.stationName}
-                </h4>
-                <style.icon className={`w-6 h-6 ${style.text}`} />
-              </div>
-
-              <div className="mt-6 flex items-end justify-between">
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                    Current Level
-                  </p>
-                  <p className={`text-4xl font-black ${style.text}`}>
-                    {node.currentLevel}{" "}
-                    <span className="text-lg font-bold opacity-60">m</span>
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <p className="text-xs font-bold text-slate-400 uppercase">
-                    Danger: {node.dangerLevel}m
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-black/5 flex justify-between items-center">
-                <Badge variant={style.variant} icon={style.icon}>
-                  {node.status}
-                </Badge>
-                <span className="text-[10px] font-bold text-slate-500 uppercase">
-                  Updated: {node.lastUpdated}
-                </span>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-</file>
-
 <file path="src/hooks/useArusAuth.js">
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
@@ -4760,6 +4852,67 @@ export default function AdminStaffTable({ staffList, onEdit, onDelete }) {
         </table>
       </div>
     </Card>
+  );
+}
+</file>
+
+<file path="src/features/telemetry/SchoolFloodDashboard.jsx">
+import Card from "../../components/ui/Card";
+import EvacuationTracker from "./EvacuationTracker";
+import DashboardHeader from "./DashboardHeader";
+import TelemetryCard from "./TelemetryCard";
+import { useFloodDashboard } from "./useFloodDashboard";
+
+export default function SchoolFloodDashboard({ schoolId, userRole }) {
+  const {
+    telemetry,
+    loading,
+    isSyncing,
+    isGeneratingPlan,
+    handleForceSync,
+    handleGenerateEvacuationPlan,
+  } = useFloodDashboard(schoolId);
+
+  if (loading && !isSyncing) {
+    return (
+      <div className="p-4 text-center text-slate-500 animate-pulse font-medium">
+        Loading live iHYDRO telemetry...
+      </div>
+    );
+  }
+
+  if (telemetry.length === 0) {
+    return (
+      <Card className="p-8 text-center bg-slate-50 border-dashed">
+        <p className="text-slate-600 font-bold mb-1">
+          No telemetry stations are currently mapped to this school.
+        </p>
+        <p className="text-sm text-slate-500">
+          Update the school's coordinates to assign stations.
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="mt-8">
+      <DashboardHeader
+        userRole={userRole}
+        loading={loading}
+        isSyncing={isSyncing}
+        isGeneratingPlan={isGeneratingPlan}
+        onGeneratePlan={handleGenerateEvacuationPlan}
+        onForceSync={handleForceSync}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {telemetry.map((node) => (
+          <TelemetryCard key={node.priority} node={node} />
+        ))}
+      </div>
+
+      <EvacuationTracker schoolId={schoolId} />
+    </div>
   );
 }
 </file>
@@ -7451,7 +7604,6 @@ import {
   ArchiveBoxIcon, 
   PencilSquareIcon, 
   ShieldCheckIcon, 
-  ArrowRightOnRectangleIcon, 
   XMarkIcon 
 } from "@heroicons/react/24/outline";
 

@@ -9,7 +9,7 @@ import {
   UsersIcon, 
   ArchiveBoxIcon, 
   PencilSquareIcon, 
-  ShieldCheckIcon, 
+  ShieldCheckIcon,
   ArrowRightOnRectangleIcon, 
   XMarkIcon 
 } from "@heroicons/react/24/outline";
