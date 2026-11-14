@@ -1,17 +1,18 @@
-
+import { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 import Badge from "./ui/Badge";
 import Button from "./ui/Button";
 import { 
   MapPinIcon, 
   QrCodeIcon, 
-  VariableIcon, 
   BuildingOfficeIcon, 
   UsersIcon, 
   ArchiveBoxIcon, 
   PencilSquareIcon, 
   ShieldCheckIcon,
   ArrowRightOnRectangleIcon, 
-  XMarkIcon 
+  XMarkIcon,
+  ExclamationTriangleIcon // <-- Added emergency icon
 } from "@heroicons/react/24/outline";
 
 const NAV_ITEMS = [
@@ -21,7 +22,14 @@ const NAV_ITEMS = [
     icon: ShieldCheckIcon,
     allowedRoles: ["superadmin"]
   },
-    {
+  {
+    id: "evacuation-orders",
+    label: "Evacuation Tasks",
+    icon: ExclamationTriangleIcon,
+    allowedRoles: ["headmaster", "asset_teacher", "standard_teacher"],
+    requiresActiveEmergency: true // <-- Custom flag for conditional visibility
+  },
+  {
     id: "asset-master-list",
     label: "Master Asset List",
     icon: ArchiveBoxIcon,
@@ -45,14 +53,6 @@ const NAV_ITEMS = [
     icon: QrCodeIcon,
     allowedRoles: ["headmaster", "asset_teacher"]
   },
-  /*
-  {
-    id: "hydrological-simulator",
-    label: "iHYDRO Simulation Panel",
-    icon: VariableIcon,
-    allowedRoles: ["superadmin", "headmaster"]
-  },
-  */
   {
     id: "school",
     label: "School Profile",
@@ -68,9 +68,63 @@ const NAV_ITEMS = [
   }
 ];
 
-export default function Sidebar({ session, userRole, currentTab, navigate, handleSignOut, sidebarOpen, setSidebarOpen }) {
+export default function Sidebar({ session, userRole, schoolId, currentTab, navigate, handleSignOut, sidebarOpen, setSidebarOpen }) {
   const role = session?.role || userRole || "";
-  
+  const activeSchoolId = schoolId || session?.school_id;
+  const [hasActiveEmergency, setHasActiveEmergency] = useState(false);
+
+  useEffect(() => {
+    if (!activeSchoolId) return;
+
+    // 1. Check if there are any active/pending evacuation orders for this school
+    const checkEmergencyStatus = async () => {
+      const { count, error } = await supabase
+        .from("evacuation_orders")
+        .select("*", { count: "exact", head: true })
+        .eq("school_id", activeSchoolId)
+        .in("status", ["pending", "in_progress"]);
+
+      if (!error) {
+        setHasActiveEmergency((count ?? 0) > 0);
+      }
+    };
+
+    checkEmergencyStatus();
+
+    // 2. Listen for immediate local trigger from SchoolFloodDashboard
+    window.addEventListener("evacuation_generated", checkEmergencyStatus);
+
+    // 3. Listen via Supabase Realtime so all logged-in teachers see the tab instantly
+    const channel = supabase
+      .channel(`emergency-status-${activeSchoolId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "evacuation_orders",
+          filter: `school_id=eq.${activeSchoolId}`,
+        },
+        () => {
+          checkEmergencyStatus();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("evacuation_generated", checkEmergencyStatus);
+      supabase.removeChannel(channel);
+    };
+  }, [activeSchoolId]);
+
+  // Filter by role AND emergency status
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    const hasRole = item.allowedRoles.includes(role);
+    if (!hasRole) return false;
+    if (item.requiresActiveEmergency && !hasActiveEmergency) return false;
+    return true;
+  });
+
   return (
     <>
       {sidebarOpen && (
@@ -105,14 +159,27 @@ export default function Sidebar({ session, userRole, currentTab, navigate, handl
             </button>
           </div>
           <div className="space-y-1">
-            {NAV_ITEMS.filter(item => item.allowedRoles.includes(userRole)).map((item) => (
+            {visibleNavItems.map((item) => (
               <button 
                 key={item.id}
                 onClick={() => navigate(item.id)} 
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded transition-colors ${item.hasDivider ? "border-t border-slate-800 mt-4 pt-4" : ""} ${currentTab === item.id ? "bg-teal-600 font-medium" : "hover:bg-slate-800 text-slate-300"}`}
+                className={`flex items-center justify-between w-full text-left px-4 py-3 rounded transition-colors ${
+                  item.hasDivider ? "border-t border-slate-800 mt-4 pt-4" : ""
+                } ${
+                  currentTab === item.id 
+                    ? (item.requiresActiveEmergency ? "bg-red-600 font-medium text-white" : "bg-teal-600 font-medium") 
+                    : (item.requiresActiveEmergency ? "bg-red-950/50 text-red-300 hover:bg-red-900/60 border border-red-800/50" : "hover:bg-slate-800 text-slate-300")
+                }`}
               >
-                <item.icon className="w-5 h-5" />
-                {item.label}
+                <span className="flex items-center gap-3">
+                  <item.icon className={`w-5 h-5 ${item.requiresActiveEmergency ? "text-red-400 animate-pulse" : ""}`} />
+                  {item.label}
+                </span>
+                {item.requiresActiveEmergency && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-red-600 text-white px-2 py-0.5 rounded-full">
+                    Live
+                  </span>
+                )}
               </button>
             ))}
           </div>

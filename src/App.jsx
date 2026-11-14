@@ -24,6 +24,7 @@ import SchoolProfile from "./components/SchoolProfile";
 
 // Telemetry (iHYDRO)
 import SchoolFloodDashboard from "./features/telemetry/SchoolFloodDashboard";
+import EvacuationTracker from "./features/telemetry/EvacuationTracker";
 
 // --- 4. LEGACY COMPONENTS & PAGES ---
 // Asset Management
@@ -77,6 +78,7 @@ function App() {
       <Sidebar
         session={session}
         userRole={userRole}
+        schoolId={userSchoolId}
         currentTab={currentTab}
         navigate={navigate}
         handleSignOut={handleSignOut}
@@ -104,6 +106,9 @@ function App() {
           )}
           {currentTab === "school" && (
             <SchoolProfile school_id={userSchoolId} userRole={userRole} />
+          )}
+          {currentTab === "evacuation-orders" && (
+            <EvacuationTracker schoolId={userSchoolId} />
           )}
           {currentTab === "asset-master-list" && (
             <AssetMasterList schoolId={userSchoolId} userRole={userRole} navigate={navigate} />

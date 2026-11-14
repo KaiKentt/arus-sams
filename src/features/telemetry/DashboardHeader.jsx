@@ -1,6 +1,8 @@
 import { SignalIcon, ShieldExclamationIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/ui/Button";
 
+const AUTHORIZED_ROLES = ["headmaster", "asset_teacher", "superadmin"];
+
 export default function DashboardHeader({ 
   userRole, 
   loading, 
@@ -9,6 +11,8 @@ export default function DashboardHeader({
   onGeneratePlan, 
   onForceSync 
 }) {
+  const canTriggerEvacuation = AUTHORIZED_ROLES.includes(userRole);
+
   return (
     <div className="flex justify-between items-center mb-6">
       <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -16,7 +20,7 @@ export default function DashboardHeader({
         Early Warning Telemetry
       </h3>
 
-      {userRole === "headmaster" && (
+      {canTriggerEvacuation && (
         <div className="flex gap-3">
           <Button
             variant="danger"
