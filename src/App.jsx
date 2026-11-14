@@ -19,7 +19,7 @@ import UpdatePassword from "./features/auth/UpdatePassword"; // NEW
 import SuperAdminDashboard from "./features/ministry/SuperAdminDashboard";
 
 // School Admin (Headmaster)
-import AdminDashboard from "./features/school/AdminDashboard"; 
+import AdminDashboard from "./features/school/AdminDashboard";
 import SchoolProfile from "./components/SchoolProfile";
 
 // Telemetry (iHYDRO)
@@ -108,10 +108,18 @@ function App() {
             <SchoolProfile school_id={userSchoolId} userRole={userRole} />
           )}
           {currentTab === "evacuation-orders" && (
-            <EvacuationTracker schoolId={userSchoolId} />
+            <EvacuationTracker
+              schoolId={userSchoolId}
+              userRole={userRole}
+              currentUserName={session?.full_name}
+            />
           )}
           {currentTab === "asset-master-list" && (
-            <AssetMasterList schoolId={userSchoolId} userRole={userRole} navigate={navigate} />
+            <AssetMasterList
+              schoolId={userSchoolId}
+              userRole={userRole}
+              navigate={navigate}
+            />
           )}
           {currentTab === "locations" && (
             <LocationManager user={session} schoolId={userSchoolId} />

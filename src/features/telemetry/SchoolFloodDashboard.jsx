@@ -52,7 +52,7 @@ export default function SchoolFloodDashboard({ schoolId, userRole }) {
         ))}
       </div>
 
-      <EvacuationTracker schoolId={schoolId} />
+      <EvacuationTracker schoolId={schoolId} userRole={userRole} />
     </div>
   );
 }
