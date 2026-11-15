@@ -152,7 +152,12 @@ export default function SuperAdminDashboard() {
 
       {activeTab === "staff" && (
         <div className="fade-in">
-          <StaffTable globalStaff={globalStaff} onEdit={setEditingStaff} onDelete={handleDeleteStaff} />
+          <StaffTable 
+            globalStaff={globalStaff} 
+            schools={schools} 
+            onEdit={setEditingStaff} 
+            onDelete={handleDeleteStaff} 
+          />
         </div>
       )}
 
