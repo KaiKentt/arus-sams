@@ -99,7 +99,8 @@ export default function EvacuationTracker({
           `,
           )
           .eq("school_id", schoolId)
-          .neq("status", "cancelled") // Hide stood-down orders from previous evacuations
+          .neq("status", "cancelled") // Hide stood-down orders
+          .neq("status", "returned")  // Hide orders whose assets have been returned home
           .order("priority_rank", { ascending: true }),
 
         supabase
