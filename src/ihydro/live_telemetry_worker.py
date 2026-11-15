@@ -188,7 +188,19 @@ def listen_for_sync_requests():
             time.sleep(10)
 
 if __name__ == "__main__":
-    # 1. Run the standard pipeline once on startup for ALL schools
+    import sys
+
+    # 1. Run the standard pipeline for ALL schools
     run_telemetry_pipeline(target_school_id=None)
-    # 2. Enter listening mode forever for TARGETED requests
-    listen_for_sync_requests()
+
+    # 2. Clear any pending 'Force Sync' flags from the web dashboard
+    try:
+        supabase.table("schools").update({"sync_requested": False}).eq("sync_requested", True).execute()
+    except Exception as e:
+        print(f"⚠️ Could not reset sync flags: {e}")
+
+    # 3. If '--once' is passed (used by GitHub Actions), exit cleanly; otherwise listen locally
+    if "--once" in sys.argv:
+        print("✅ Single scheduled sync complete. Exiting.")
+    else:
+        listen_for_sync_requests()
