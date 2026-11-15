@@ -4,11 +4,10 @@ import { supabase } from "../../supabaseClient";
 export default function AdminEditStaffForm({ staff, onSuccess, onCancel }) {
   // Initialize local state with the passed-in staff prop
   const [formData, setFormData] = useState({
-    full_name: staff.full_name,
-    email: staff.email,
-    phone_no: staff.phone_no,
-    role: staff.role,
-    stored_password: staff.stored_password,
+    full_name: staff.full_name || "",
+    email: staff.email || "",
+    phone_no: staff.phone_no || "",
+    role: staff.role || "standard_teacher"
   });
 
   const handleUpdateStaff = async (e) => {
@@ -32,9 +31,9 @@ export default function AdminEditStaffForm({ staff, onSuccess, onCancel }) {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Update Profile: {staff.full_name}</h2>
-          <p className="text-sm text-slate-500">Modify system credentials and details.</p>
+          <p className="text-sm text-slate-500">Modify staff workspace scope and contact details.</p>
         </div>
-        <button onClick={onCancel} className="text-slate-400 hover:text-slate-700 font-bold text-xl">✕</button>
+        <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-700 font-bold text-xl">✕</button>
       </div>
 
       <form onSubmit={handleUpdateStaff} className="space-y-4">
@@ -63,13 +62,8 @@ export default function AdminEditStaffForm({ staff, onSuccess, onCancel }) {
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-1 text-red-500">System Password</label>
-          <input type="text" value={formData.stored_password} onChange={(e) => setFormData({ ...formData, stored_password: e.target.value })} className="border p-2 w-full rounded focus:ring-2 focus:ring-red-400 bg-red-50" required />
-        </div>
-
         <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow hover:bg-blue-700 mt-6">
-          💾 Save Profile Updates
+          Save Profile Updates
         </button>
       </form>
     </div>
