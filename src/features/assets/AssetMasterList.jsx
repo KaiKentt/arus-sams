@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import {
   QrCodeIcon,
   ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
   PrinterIcon,
   PlusIcon,
   PencilSquareIcon,
@@ -17,6 +18,7 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
+import ImportAssetsModal from "./ImportAssetsModal";
 import { supabase } from "../../supabaseClient";
 import EditAssetModal from "./EditAssetModal";
 import AssetAnalytics from "./AssetAnalytics";
@@ -258,6 +260,7 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
   const [activeTab, setActiveTab] = useState("All");
 
   const [editingAsset, setEditingAsset] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [qrModalAsset, setQrModalAsset] = useState(null);
   const [qrToast, setQrToast] = useState(null);
   const [generatingQrFor, setGeneratingQrFor] = useState(null);
@@ -669,14 +672,24 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
               </Button>
             )}
             {canEdit && (
-              <Button
-                onClick={() => navigate("asset-registration")}
-                className="px-4 py-2.5 text-sm"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Register New Asset
-              </Button>
-            )}
+           <>
+             <Button
+               onClick={() => setShowImportModal(true)}
+               variant="secondary"
+               className="px-4 py-2.5 text-sm"
+             >
+               <ArrowUpTrayIcon className="w-4 h-4" />
+               <span>Import SPPA CSV</span>
+             </Button>
+             <Button
+               onClick={() => navigate("asset-registration")}
+               className="px-4 py-2.5 text-sm"
+             >
+               <PlusIcon className="w-4 h-4" />
+               Register New Asset
+             </Button>
+           </>
+         )}
           </div>
         </div>
       </Card>
@@ -988,6 +1001,14 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
           refreshData={fetchData}
         />
       )}
+
+      {showImportModal && (
+     <ImportAssetsModal
+       schoolId={schoolId}
+       onClose={() => setShowImportModal(false)}
+       onImportSuccess={fetchData}
+     />
+   )}
 
       {qrModalAsset && (
         <QrModal
