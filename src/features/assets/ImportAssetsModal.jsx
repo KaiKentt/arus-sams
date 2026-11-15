@@ -119,7 +119,7 @@ function mapAcquisitionMethod(rawMethod) {
   if (m.includes("HADIAH") || m.includes("SUMBANGAN")) return "Donation";
   if (m.includes("PINDAHAN") || m.includes("TERIMAAN")) return "Transfer";
   if (m.includes("SEWA") || m.includes("PAJAK")) return "Lease";
-  return "Purchase"; // Maps SPPA "PEROLEHAN" / "BELIAN" -> "Purchase"
+  return "Purchase";
 }
 
 function extractAssetType(regNo, price) {
