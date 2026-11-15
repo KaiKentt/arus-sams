@@ -190,17 +190,30 @@ def listen_for_sync_requests():
 if __name__ == "__main__":
     import sys
 
-    # 1. Run the standard pipeline for ALL schools
-    run_telemetry_pipeline(target_school_id=None)
-
-    # 2. Clear any pending 'Force Sync' flags from the web dashboard
     try:
-        supabase.table("schools").update({"sync_requested": False}).eq("sync_requested", True).execute()
-    except Exception as e:
-        print(f"⚠️ Could not reset sync flags: {e}")
+        # Check if this run was triggered by a school clicking 'Force Sync'
+        pending = supabase.table("schools").select("school_id").eq("sync_requested", True).execute()
 
-    # 3. If '--once' is passed (used by GitHub Actions), exit cleanly; otherwise listen locally
+        if pending.data:
+            # Targeted sync: only scrape stations for the school(s) that clicked Force Sync
+            for school in pending.data:
+                school_id = school["school_id"]
+                print(f"⚡ FORCE SYNC DETECTED for School ID: {school_id}")
+                run_telemetry_pipeline(target_school_id=school_id)
+        else:
+            # Scheduled 30-min cron run: sync all schools + run 7-day cleanup
+            run_telemetry_pipeline(target_school_id=None)
+
+    finally:
+        # Always reset sync_requested to False, even if an error occurred above
+        try:
+            supabase.table("schools").update({"sync_requested": False}).eq("sync_requested", True).execute()
+            print("🔓 Reset all pending sync_requested flags to False.")
+        except Exception as e:
+            print(f"⚠️ Could not reset sync flags: {e}")
+
+    # If '--once' is passed (used by GitHub Actions), exit cleanly; otherwise listen locally
     if "--once" in sys.argv:
-        print("✅ Single scheduled sync complete. Exiting.")
+        print("✅ Single sync complete. Exiting.")
     else:
         listen_for_sync_requests()

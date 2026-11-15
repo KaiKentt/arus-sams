@@ -60,47 +60,71 @@ export function useFloodDashboard(schoolId) {
   const handleForceSync = async () => {
     setIsSyncing(true);
     try {
-      await supabase.from("schools").update({ sync_requested: true }).eq("school_id", schoolId);
+      const { data: updatedRows, error: updateError } = await supabase
+        .from("schools")
+        .update({ sync_requested: true })
+        .eq("school_id", schoolId)
+        .select("school_id, sync_requested");
+
+      if (updateError) {
+        throw new Error(`Database update error: ${updateError.message}`);
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        throw new Error(
+          `No school row updated for school_id="${schoolId}". Check RLS UPDATE policy on "schools" or verify schoolId.`
+        );
+      }
+
       let isPythonDone = false;
       let attempts = 0;
-      
-      while (!isPythonDone && attempts < 10) { 
+
+      // Wait up to 60 seconds (30 attempts * 2s) for GitHub Actions runner to finish
+      while (!isPythonDone && attempts < 30) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        const { data } = await supabase.from("schools").select("sync_requested").eq("school_id", schoolId).single();
-        if (data && data.sync_requested === false) isPythonDone = true; 
+        const { data } = await supabase
+          .from("schools")
+          .select("sync_requested")
+          .eq("school_id", schoolId)
+          .single();
+
+        if (data && data.sync_requested === false) {
+          isPythonDone = true;
+        }
         attempts++;
       }
+
       await fetchDashboardData();
     } catch (error) {
       console.error("Manual sync failed:", error);
+      alert("Force Sync failed: " + error.message);
     } finally {
       setIsSyncing(false);
     }
   };
 
   const handleGenerateEvacuationPlan = async () => {
-  const confirmTrigger = window.confirm(
-    "CRITICAL ACTION: Are you sure you want to trigger the flood evacuation plan? This will immediately notify teachers and assign assets to safe rooms."
-  );
-  if (!confirmTrigger) return;
+    const confirmTrigger = window.confirm(
+      "CRITICAL ACTION: Are you sure you want to trigger the flood evacuation plan? This will immediately notify teachers and assign assets to safe rooms."
+    );
+    if (!confirmTrigger) return;
 
-  setIsGeneratingPlan(true);
-  try {
-    const { data, error } = await supabase.rpc("generate_evacuation_plan", { p_school_id: schoolId });
-    if (error) throw error;
-    
-    // 2. Save the returned data to your new state instead of just logging it
-    setEvacuationPlan(data);
-    alert("Evacuation Plan generated successfully! Ground staff can now view their tasks.");
-    
-    window.dispatchEvent(new Event("evacuation_generated"));
-  } catch (error) {
-    console.error("Failed to generate evacuation plan:", error);
-    alert("Failed to generate plan: " + error.message);
-  } finally {
-    setIsGeneratingPlan(false);
-  }
-};
+    setIsGeneratingPlan(true);
+    try {
+      const { data, error } = await supabase.rpc("generate_evacuation_plan", { p_school_id: schoolId });
+      if (error) throw error;
+
+      setEvacuationPlan(data);
+      alert("Evacuation Plan generated successfully! Ground staff can now view their tasks.");
+
+      window.dispatchEvent(new Event("evacuation_generated"));
+    } catch (error) {
+      console.error("Failed to generate evacuation plan:", error);
+      alert("Failed to generate plan: " + error.message);
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
 
   return {
     telemetry,
