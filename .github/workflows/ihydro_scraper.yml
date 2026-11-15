@@ -1,12 +1,10 @@
 name: iHYDRO Live Telemetry Sync
 
 on:
-  schedule:
-    - cron: "*/30 * * * *" # Runs automatically every 30 minutes
-  workflow_dispatch:       # Enables the manual "Run workflow" button in GitHub
+  workflow_dispatch:
     inputs:
       sync_stations_first:
-        description: "Also refresh master station list & GPS coordinates? (true/false)"
+        description: "Sync master station list & coordinates before scraping?"
         required: false
         default: "false"
 
