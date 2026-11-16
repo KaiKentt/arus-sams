@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../supabaseClient";
 import Button from "../../components/ui/Button";
 import { 
@@ -15,6 +15,32 @@ import EditStaffModal from "./EditStaffModal";
 import MinistryOverview from "./MinistryOverview";
 import AssetAnalytics from "../assets/AssetAnalytics"; 
 
+// Pure async fetcher outside the component so hooks never access uninitialized variables
+async function loadMinistryData() {
+  const [schoolsRes, staffRes, assetsRes] = await Promise.all([
+    supabase
+      .from("schools")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("staff")
+      .select(`*, schools (school_name)`),
+    supabase
+      .from("assets")
+      .select("*"),
+  ]);
+
+  if (schoolsRes.error) console.error("Schools fetch error:", schoolsRes.error.message);
+  if (staffRes.error) console.error("Staff fetch error:", staffRes.error.message);
+  if (assetsRes.error) console.error("Assets fetch error:", assetsRes.error.message);
+
+  return {
+    schoolsData: schoolsRes.data || null,
+    staffData: staffRes.data || null,
+    assetsData: assetsRes.data || null,
+  };
+}
+
 export default function SuperAdminDashboard() {
   const [schools, setSchools] = useState([]);
   const [globalStaff, setGlobalStaff] = useState([]);
@@ -28,32 +54,29 @@ export default function SuperAdminDashboard() {
   const [editingSchool, setEditingSchool] = useState(null); 
   const [editingStaff, setEditingStaff] = useState(null);
 
-  useEffect(() => {
-    fetchSystemData();
-  }, []);
-
-  const fetchSystemData = async () => {
-    const { data: schoolsData, error: schoolsError } = await supabase
-      .from("schools")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    const { data: staffData, error: staffError } = await supabase
-      .from("staff")
-      .select(`*, schools (school_name)`);
-
-    const { data: assetsData, error: assetsError } = await supabase
-      .from("assets")
-      .select("*");
-
-    if (schoolsError) console.error("Schools fetch error:", schoolsError.message);
-    if (staffError) console.error("Staff fetch error:", staffError.message);
-    if (assetsError) console.error("Assets fetch error:", assetsError.message);
-
+  // 1. Declared BEFORE any handlers or effects that reference it
+  const fetchSystemData = useCallback(async () => {
+    const { schoolsData, staffData, assetsData } = await loadMinistryData();
     if (schoolsData) setSchools(schoolsData);
     if (staffData) setGlobalStaff(staffData);
-    if (assetsData) setGlobalAssets(assetsData); 
-  };
+    if (assetsData) setGlobalAssets(assetsData);
+  }, []);
+
+  // 2. Initial load on mount using async callback so ESLint is 100% satisfied
+  useEffect(() => {
+    let ignore = false;
+
+    loadMinistryData().then(({ schoolsData, staffData, assetsData }) => {
+      if (ignore) return;
+      if (schoolsData) setSchools(schoolsData);
+      if (staffData) setGlobalStaff(staffData);
+      if (assetsData) setGlobalAssets(assetsData);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleDeleteSchool = async (schoolId, schoolName) => {
     const confirmDelete = window.confirm(`Are you sure you want to permanently delete ${schoolName}?`);
@@ -146,7 +169,13 @@ export default function SuperAdminDashboard() {
 
       {activeTab === "schools" && (
         <div className="fade-in">
-          <SchoolsTable schools={schools} onEdit={setEditingSchool} onDelete={handleDeleteSchool} />
+          <SchoolsTable 
+            schools={schools} 
+            globalStaff={globalStaff}
+            globalAssets={globalAssets}
+            onEdit={setEditingSchool} 
+            onDelete={handleDeleteSchool} 
+          />
         </div>
       )}
 
@@ -154,7 +183,6 @@ export default function SuperAdminDashboard() {
         <div className="fade-in">
           <StaffTable 
             globalStaff={globalStaff} 
-            schools={schools} 
             onEdit={setEditingStaff} 
             onDelete={handleDeleteStaff} 
           />
