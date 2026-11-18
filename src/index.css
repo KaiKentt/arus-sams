@@ -122,3 +122,53 @@
   height: 4px;
   background: linear-gradient(90deg, #0d9488, #10b981, #06b6d4);
 }
+
+/* 7. Global Table Header, Zebra Striping & Smart Text Wrapping */
+
+/* Solid, high-contrast table header row */
+table thead tr {
+  background-color: #e2e8f0 !important; /* Solid slate-200 header */
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+table thead th,
+table thead th span {
+  color: #1e293b !important; /* Crisp slate-800 header text */
+  white-space: nowrap !important;
+}
+
+/* Alternating body row shades */
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f8fafc; /* Subtle slate-50 alternating shade */
+}
+
+table tbody tr:hover {
+  background-color: #f0fdfa !important; /* Soft teal-50 highlight on hover */
+}
+
+/* Wrap multi-word text at spaces only — NEVER split single words like ACTIVE */
+table tbody td:not([colspan]) {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  max-width: 240px;
+  line-height: 1.45;
+}
+
+/* Allow multi-word category badges to wrap between words without breaking single words */
+table tbody td span {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  line-height: 1.35;
+}
+
+/* Keep QR Tag IDs (font-mono) and action buttons on a single line */
+table tbody td .font-mono,
+table tbody td:last-child {
+  white-space: nowrap !important;
+}

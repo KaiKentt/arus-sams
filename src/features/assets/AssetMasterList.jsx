@@ -823,15 +823,15 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
                       </td>
 
                       {/* Asset Name */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900 max-w-[200px] leading-snug">
                         {asset.asset_name}
                       </td>
 
                       {/* Category */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Badge variant="neutral">
+                      <td className="px-6 py-4 text-sm max-w-[220px]">
+                        <span className="inline-block px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-normal leading-snug">
                           {asset.category || "Uncategorized"}
-                        </Badge>
+                        </span>
                       </td>
 
                       {/* Location */}
