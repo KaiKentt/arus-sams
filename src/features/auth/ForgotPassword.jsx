@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { supabase } from "../../supabaseClient";
-import Card from "../../components/ui/Card";
+import AuthLayout from "../../components/layout/AuthLayout";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
-import { KeyIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import {
+  KeyIcon,
+  EnvelopeIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
 
 export default function ForgotPassword({ navigate }) {
   const [email, setEmail] = useState("");
@@ -16,7 +21,7 @@ export default function ForgotPassword({ navigate }) {
     setErrorMessage("");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`, 
+      redirectTo: `${window.location.origin}/update-password`,
     });
 
     if (error) {
@@ -28,59 +33,68 @@ export default function ForgotPassword({ navigate }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 shadow-xl">
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-            <KeyIcon className="w-6 h-6 text-teal-600" />
+    <AuthLayout
+      icon={KeyIcon}
+      title="Reset Password"
+      subtitle="Enter your official school email to receive a secure recovery link."
+      footer={
+        <button
+          type="button"
+          onClick={() => navigate("login")}
+          className="w-full inline-flex items-center justify-center gap-2 text-sm font-bold text-slate-600 hover:text-teal-700 transition-colors cursor-pointer"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Back to Sign In
+        </button>
+      }
+    >
+      {status === "success" ? (
+        <div className="bg-emerald-50 text-emerald-900 p-5 rounded-2xl text-center border border-emerald-200 space-y-3">
+          <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+            <CheckCircleIcon className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">Reset Password</h2>
-          <p className="text-sm text-slate-500 text-center mt-2">
-            Enter your official school email and we'll send you a secure recovery link.
-          </p>
+          <div>
+            <p className="font-bold text-base">Recovery Email Sent</p>
+            <p className="text-xs sm:text-sm text-emerald-800/90 mt-1 leading-relaxed">
+              We have sent a password reset link to{" "}
+              <strong className="font-semibold">{email}</strong>. Please check
+              your inbox (and spam folder).
+            </p>
+          </div>
         </div>
-
-        {status === "success" ? (
-          <div className="bg-green-50 text-green-800 p-4 rounded-lg text-sm text-center font-medium border border-green-200">
-            Recovery email sent! Please check your inbox.
-          </div>
-        ) : (
-          <form onSubmit={handleRequestReset} className="space-y-4">
-            {status === "error" && (
-              <div className="text-red-600 text-sm font-bold bg-red-50 p-3 rounded border border-red-100">
-                {errorMessage}
-              </div>
-            )}
-            
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-6">
-                <EnvelopeIcon className="h-5 w-5 text-slate-400" />
-              </div>
-              <Input
-                label="Email Address"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="teacher@school.edu.my"
-                className="pl-10"
-              />
+      ) : (
+        <form onSubmit={handleRequestReset} className="space-y-4">
+          {status === "error" && (
+            <div className="text-red-700 text-xs sm:text-sm font-semibold bg-red-50 p-3.5 rounded-xl border border-red-200">
+              {errorMessage}
             </div>
+          )}
 
-            <Button type="submit" variant="primary" className="w-full py-3 mt-2" disabled={status === "loading"}>
-              {status === "loading" ? "Sending..." : "Send Recovery Link"}
-            </Button>
-            
-            <button 
-              type="button" 
-              onClick={() => navigate("login")}
-              className="w-full mt-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+          <Input
+            id="recovery-email"
+            label="Institutional Email Address"
+            icon={EnvelopeIcon}
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="teacher@school.edu.my"
+          />
+
+          <div className="pt-1">
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full py-3"
+              disabled={status === "loading"}
             >
-              Back to Login
-            </button>
-          </form>
-        )}
-      </Card>
-    </div>
+              {status === "loading"
+                ? "Sending Recovery Link..."
+                : "Send Recovery Link"}
+            </Button>
+          </div>
+        </form>
+      )}
+    </AuthLayout>
   );
 }

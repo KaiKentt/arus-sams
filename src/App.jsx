@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabaseClient";
 
 // --- 1. HOOKS & CONTEXT ---
 import { useArusAuth } from "./hooks/useArusAuth";
@@ -6,24 +7,24 @@ import { useArusAuth } from "./hooks/useArusAuth";
 // --- 2. GLOBAL UI & LAYOUT ---
 import Sidebar from "./components/Sidebar";
 import TopMobileBar from "./components/TopMobileBar";
-import AlertBanner from "./components/AlertBanner";
+
 
 // --- 3. FEATURE MODULES ---
 // Auth Identity
 import Auth from "./features/auth/Auth";
 import UserProfile from "./features/auth/UserProfile";
-import ForgotPassword from "./features/auth/ForgotPassword"; // NEW
-import UpdatePassword from "./features/auth/UpdatePassword"; // NEW
+import ForgotPassword from "./features/auth/ForgotPassword";
+import UpdatePassword from "./features/auth/UpdatePassword";
 
 // Ministry (Super Admin)
 import SuperAdminDashboard from "./features/ministry/SuperAdminDashboard";
 
 // School Admin (Headmaster)
-import AdminDashboard from "./features/school/AdminDashboard"; 
+import AdminDashboard from "./features/school/AdminDashboard";
 import SchoolProfile from "./components/SchoolProfile";
 
 // Telemetry (iHYDRO)
-import SchoolFloodDashboard from "./features/telemetry/SchoolFloodDashboard";
+import EvacuationTracker from "./features/telemetry/EvacuationTracker";
 
 // --- 4. LEGACY COMPONENTS & PAGES ---
 // Asset Management
@@ -33,50 +34,86 @@ import MobileAudit from "./pages/MobileAudit";
 
 // Utilities
 import LocationManager from "./pages/LocationManager";
-import HydrologicalSimulator from "./pages/HydrologicalSimulator";
+
+
+function isRecoveryUrl() {
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname;
+  const hash = window.location.hash;
+  const search = window.location.search;
+  return (
+    path === "/update-password" ||
+    hash.includes("type=recovery") ||
+    search.includes("type=recovery")
+  );
+}
 
 function App() {
   // Routing UI State
-  const [currentTab, setCurrentTab] = useState("mobile-audit");
+  const [currentTab, setCurrentTab] = useState(() =>
+    isRecoveryUrl() ? "update-password" : "mobile-audit"
+  );
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(() =>
+    isRecoveryUrl()
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Bring in all the complex logic from our Custom Hook!
+  // Bring in all the complex logic from our Custom Hook
   const {
     session,
     userRole,
     userSchoolId,
-    isCritical,
     handleDemoLogin,
     handleSignOut,
     handleSessionUpdate,
   } = useArusAuth(setCurrentTab);
 
+  // Listen for Supabase PASSWORD_RECOVERY event when user arrives from email link
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+        setCurrentTab("update-password");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const navigate = (tab) => {
+    // Clean up URL path & recovery flag when returning to normal login
+    if (tab === "login" && isPasswordRecovery) {
+      setIsPasswordRecovery(false);
+      window.history.replaceState({}, "", "/");
+    }
     setCurrentTab(tab);
     setSidebarOpen(false);
   };
 
+  // --- PASSWORD RECOVERY ROUTE (Takes priority even while Supabase holds temporary recovery session) ---
+  if (isPasswordRecovery || currentTab === "update-password") {
+    return <UpdatePassword navigate={navigate} />;
+  }
+
   // --- UNAUTHENTICATED ROUTING ---
-  // If the user is not logged in, only allow them to see Auth-related pages
   if (!session) {
     if (currentTab === "forgot-password") {
       return <ForgotPassword navigate={navigate} />;
     }
-    if (currentTab === "update-password") {
-      return <UpdatePassword navigate={navigate} />;
-    }
-    // Default fallback is the Login screen (pass navigate so the Forgot Password button works!)
     return <Auth onDemoLogin={handleDemoLogin} navigate={navigate} />;
   }
 
   // --- MAIN UI RENDER (AUTHENTICATED) ---
   return (
-    <div className="flex h-screen bg-slate-100 font-sans relative overflow-hidden">
-      <AlertBanner isCritical={isCritical} />
+    <div className="flex h-screen bg-slate-50 font-sans relative overflow-hidden">
+      
 
       <Sidebar
         session={session}
         userRole={userRole}
+        schoolId={userSchoolId}
         currentTab={currentTab}
         navigate={navigate}
         handleSignOut={handleSignOut}
@@ -105,8 +142,19 @@ function App() {
           {currentTab === "school" && (
             <SchoolProfile school_id={userSchoolId} userRole={userRole} />
           )}
+          {currentTab === "evacuation-orders" && (
+            <EvacuationTracker
+              schoolId={userSchoolId}
+              userRole={userRole}
+              currentUserName={session?.full_name}
+            />
+          )}
           {currentTab === "asset-master-list" && (
-            <AssetMasterList schoolId={userSchoolId} userRole={userRole} navigate={navigate} />
+            <AssetMasterList
+              schoolId={userSchoolId}
+              userRole={userRole}
+              navigate={navigate}
+            />
           )}
           {currentTab === "locations" && (
             <LocationManager user={session} schoolId={userSchoolId} />
@@ -120,7 +168,7 @@ function App() {
             />
           )}
           {currentTab === "mobile-audit" && <MobileAudit user={session} />}
-          {currentTab === "hydrological-simulator" && <HydrologicalSimulator />}
+          
         </div>
       </div>
     </div>

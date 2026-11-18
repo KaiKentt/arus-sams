@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import QRCode from "qrcode";
-import { 
-  QrCodeIcon, 
-  ArrowDownTrayIcon, 
+import {
+  QrCodeIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
   PrinterIcon,
   PlusIcon,
   PencilSquareIcon,
@@ -11,8 +12,13 @@ import {
   ChevronDownIcon,
   ArrowsUpDownIcon,
   CheckCircleIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  TrashIcon,
+  ArrowUturnLeftIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
+
+import ImportAssetsModal from "./ImportAssetsModal";
 import { supabase } from "../../supabaseClient";
 import EditAssetModal from "./EditAssetModal";
 import AssetAnalytics from "./AssetAnalytics";
@@ -43,7 +49,11 @@ function SortButton({ label, field, sortField, sortDir, onSort }) {
         className={`w-3 h-3 ${active ? "text-teal-600" : "text-slate-300 group-hover:text-slate-400"}`}
       >
         {active ? (
-          sortDir === "asc" ? <ChevronUpIcon /> : <ChevronDownIcon />
+          sortDir === "asc" ? (
+            <ChevronUpIcon />
+          ) : (
+            <ChevronDownIcon />
+          )
         ) : (
           <ArrowsUpDownIcon />
         )}
@@ -237,8 +247,63 @@ function QrModal({ asset, locationPath, schoolName, onClose }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+async function loadMasterListData(schoolId) {
+  const [assetsRes, locationsRes, schoolRes] = await Promise.all([
+    supabase
+      .from("assets")
+      .select("*")
+      .eq("school_id", schoolId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("locations")
+      .select("location_id, location_name, parent_location_id")
+      .eq("school_id", schoolId),
+    supabase
+      .from("schools")
+      .select("school_name")
+      .eq("school_id", schoolId)
+      .maybeSingle(),
+  ]);
 
-const TABS = ["All", "Operational", "Pending Action", "In Repair", "Written Off"];
+  const assets = assetsRes.data || [];
+  const locations = locationsRes.data || [];
+  const schoolName = schoolRes.data?.school_name || "";
+
+  const usageMap = {};
+  const assetIds = assets.map((a) => a.asset_id);
+  if (assetIds.length > 0) {
+    const { data: inspections } = await supabase
+      .from("asset_inspection")
+      .select("asset_id, usage_status, verified_at")
+      .in("asset_id", assetIds)
+      .order("verified_at", { ascending: false });
+
+    (inspections || []).forEach((row) => {
+      if (!usageMap[row.asset_id]) usageMap[row.asset_id] = row.usage_status;
+    });
+  }
+
+  const locMap = {};
+  locations.forEach((loc) => {
+    locMap[loc.location_id] = loc;
+  });
+
+  const paths = {};
+  locations.forEach((loc) => {
+    const parts = [];
+    let current = loc;
+    while (current) {
+      parts.unshift(current.location_name);
+      current = current.parent_location_id
+        ? locMap[current.parent_location_id]
+        : null;
+    }
+    paths[loc.location_id] = parts.join(" › ");
+  });
+
+  return { assets, usageMap, paths, schoolName };
+}
+
 
 export default function AssetMasterList({ schoolId, userRole, navigate }) {
   const [assets, setAssets] = useState([]);
@@ -252,6 +317,7 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
   const [activeTab, setActiveTab] = useState("All");
 
   const [editingAsset, setEditingAsset] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [qrModalAsset, setQrModalAsset] = useState(null);
   const [qrToast, setQrToast] = useState(null);
   const [generatingQrFor, setGeneratingQrFor] = useState(null);
@@ -260,6 +326,23 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
   const [sortDir, setSortDir] = useState("asc");
 
   const canEdit = userRole === "headmaster" || userRole === "asset_teacher";
+
+  // Dynamically generate tabs based on user role
+  const TABS = useMemo(() => {
+    const base = [
+      "All",
+      "Operational",
+      "Evacuated",
+      "Request for Audit",
+      "In Repair",
+      "Written Off",
+    ];
+    if (userRole === "headmaster") {
+      // Insert the special Disposal Requests tab at index 4
+      base.splice(4, 0, "Disposal Requests");
+    }
+    return base;
+  }, [userRole]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -272,20 +355,43 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
 
   // 1. First layer of sorting: Text Search and Tabs
   const filteredAssets = useMemo(() => {
-    return assets.filter(asset => {
+    return assets.filter((asset) => {
       // Text Search
-      const matchesSearch = 
-        (asset.asset_name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (asset.qr_code_id || "").toLowerCase().includes(searchTerm.toLowerCase());
-      
+      const matchesSearch =
+        (asset.asset_name || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (asset.qr_code_id || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
       if (!matchesSearch) return false;
 
       // Status Tab Filter
       if (activeTab === "All") return true;
       if (activeTab === "Operational" && asset.status === "Active") return true;
-      if (activeTab === "Pending Action" && (asset.status === "Audit Requested" || asset.status === "Disposal Requested")) return true;
-      if (activeTab === "In Repair" && (asset.status === "Under Maintenance" || asset.status === "Broken")) return true;
-      if (activeTab === "Written Off" && (asset.status === "Lost" || asset.status === "Disposed")) return true;
+      if (activeTab === "Evacuated" && Boolean(asset.home_location_id))
+        return true;
+      if (
+        activeTab === "Request for Audit" &&
+        asset.status === "Audit Requested"
+      )
+        return true;
+      if (
+        activeTab === "Disposal Requests" &&
+        asset.status === "Disposal Requested"
+      )
+        return true;
+      if (
+        activeTab === "In Repair" &&
+        (asset.status === "Under Maintenance" || asset.status === "Broken")
+      )
+        return true;
+      if (
+        activeTab === "Written Off" &&
+        (asset.status === "Lost" || asset.status === "Disposed")
+      )
+        return true;
 
       return false;
     });
@@ -302,6 +408,62 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
       return 0;
     });
   }, [filteredAssets, sortField, sortDir]);
+
+ const fetchData = useCallback(async () => {
+    if (!schoolId) return;
+    setLoading(true);
+    try {
+      const res = await loadMasterListData(schoolId);
+      setAssets(res.assets);
+      setLastUsageMap(res.usageMap);
+      setLocationPaths(res.paths);
+      setSchoolName(res.schoolName);
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+    let ignore = false;
+
+    loadMasterListData(schoolId)
+      .then((res) => {
+        if (ignore) return;
+        setAssets(res.assets);
+        setLastUsageMap(res.usageMap);
+        setLocationPaths(res.paths);
+        setSchoolName(res.schoolName);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    const channel = supabase
+      .channel(`assets-master-${schoolId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "assets",
+          filter: `school_id=eq.${schoolId}`,
+        },
+        () => {
+          loadMasterListData(schoolId).then((res) => {
+            if (ignore) return;
+            setAssets(res.assets);
+            setLastUsageMap(res.usageMap);
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      ignore = true;
+      supabase.removeChannel(channel);
+    };
+  }, [schoolId]);
 
   const handleGenerateQR = async (assetId) => {
     setGeneratingQrFor(assetId);
@@ -392,79 +554,96 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
     printWindow.document.close();
   };
 
-  useEffect(() => {
-    if (schoolId) fetchData();
-  }, [schoolId]);
+  const handleRequestDisposal = async (assetId, assetName) => {
+    const confirmDisposal = window.confirm(
+      `Are you sure you want to request disposal for ${assetName}?`,
+    );
+    if (!confirmDisposal) return;
 
-  const fetchData = async () => {
-    setLoading(true);
-    await Promise.all([fetchAssets(), fetchLocationPaths(), fetchSchoolName()]);
-    setLoading(false);
-  };
+    try {
+      const { error } = await supabase
+        .from("assets")
+        .update({ status: "Disposal Requested" })
+        .eq("asset_id", assetId);
 
-  const fetchSchoolName = async () => {
-    const { data } = await supabase
-      .from("schools")
-      .select("school_name")
-      .eq("school_id", schoolId)
-      .single();
-    if (data) setSchoolName(data.school_name || "");
-  };
+      if (error) throw error;
 
-  const fetchAssets = async () => {
-    const { data, error } = await supabase
-      .from("assets")
-      .select("*")
-      .eq("school_id", schoolId)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setAssets(data);
-      fetchLastUsageStatus(data.map((a) => a.asset_id));
+      alert(`Disposal requested for ${assetName}.`);
+      fetchData();
+    } catch (err) {
+      alert("Failed to request disposal: " + err.message);
     }
   };
 
-  const fetchLastUsageStatus = async (assetIds) => {
-    if (!assetIds.length) return;
-    const { data } = await supabase
-      .from("asset_inspection")
-      .select("asset_id, usage_status, verified_at")
-      .in("asset_id", assetIds)
-      .order("verified_at", { ascending: false });
+  const handleApproveDisposal = async (assetId, assetName) => {
+    const confirm = window.confirm(
+      `Approve disposal for ${assetName}? This will permanently mark it as Disposed.`,
+    );
+    if (!confirm) return;
 
-    if (!data) return;
-    const map = {};
-    data.forEach((row) => {
-      if (!map[row.asset_id]) map[row.asset_id] = row.usage_status;
-    });
-    setLastUsageMap(map);
+    try {
+      const { error } = await supabase
+        .from("assets")
+        .update({ status: "Disposed" })
+        .eq("asset_id", assetId);
+
+      if (error) throw error;
+
+      alert(`Disposal approved for ${assetName}.`);
+      fetchData();
+    } catch (err) {
+      alert("Failed to approve disposal: " + err.message);
+    }
   };
 
-  const fetchLocationPaths = async () => {
-    const { data } = await supabase
-      .from("locations")
-      .select("location_id, location_name, parent_location_id")
-      .eq("school_id", schoolId);
+  const handleRejectDisposal = async (assetId, assetName) => {
+    const confirm = window.confirm(
+      `Reject disposal request for ${assetName}? This will return it to Active status.`,
+    );
+    if (!confirm) return;
 
-    if (!data) return;
-    const map = {};
-    data.forEach((loc) => {
-      map[loc.location_id] = loc;
-    });
-    const paths = {};
-    data.forEach((loc) => {
-      const parts = [];
-      let current = loc;
-      while (current) {
-        parts.unshift(current.location_name);
-        current = current.parent_location_id
-          ? map[current.parent_location_id]
-          : null;
-      }
-      paths[loc.location_id] = parts.join(" › ");
-    });
-    setLocationPaths(paths);
+    try {
+      const { error } = await supabase
+        .from("assets")
+        .update({ status: "Active" })
+        .eq("asset_id", assetId);
+
+      if (error) throw error;
+
+      alert(`Disposal rejected for ${assetName}.`);
+      fetchData();
+    } catch (err) {
+      alert("Failed to reject disposal: " + err.message);
+    }
   };
+
+  const handleReturnToHome = async (asset) => {
+    const homePath =
+      locationPaths[asset.home_location_id] || "its original room";
+    const confirmed = window.confirm(
+      `Confirm that ${asset.asset_name} has been physically returned to ${homePath}?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from("assets")
+        .update({
+          location_id: asset.home_location_id,
+          home_location_id: null,
+        })
+        .eq("asset_id", asset.asset_id);
+
+      if (error) throw error;
+
+      setQrToast(`${asset.asset_name} returned to ${homePath}`);
+      setTimeout(() => setQrToast(null), 4000);
+      fetchData();
+    } catch (err) {
+      alert("Failed to restore asset location: " + err.message);
+    }
+  };
+
 
   const closeQrModal = useCallback(() => setQrModalAsset(null), []);
 
@@ -512,14 +691,24 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
               </Button>
             )}
             {canEdit && (
-              <Button
-                onClick={() => navigate("asset-registration")}
-                className="px-4 py-2.5 text-sm"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Register New Asset
-              </Button>
-            )}
+           <>
+             <Button
+               onClick={() => setShowImportModal(true)}
+               variant="secondary"
+               className="px-4 py-2.5 text-sm"
+             >
+               <ArrowUpTrayIcon className="w-4 h-4" />
+               <span>Import SPPA CSV</span>
+             </Button>
+             <Button
+               onClick={() => navigate("asset-registration")}
+               className="px-4 py-2.5 text-sm"
+             >
+               <PlusIcon className="w-4 h-4" />
+               Register New Asset
+             </Button>
+           </>
+         )}
           </div>
         </div>
       </Card>
@@ -529,7 +718,7 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
       {/* Filter and Search Bar */}
       <Card className="p-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
         <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto scrollbar-hide">
-          {TABS.map(tab => (
+          {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -547,11 +736,11 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
           </div>
-          <input 
-            type="text" 
-            placeholder="Search by name or QR..." 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
+          <input
+            type="text"
+            placeholder="Search by name or QR..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
           />
         </div>
@@ -613,16 +802,31 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
               ) : (
                 sortedAssets.map((asset) => {
                   const usage = lastUsageMap[asset.asset_id];
-                  
+
                   // Status to Badge Variant mapping
                   let statusVariant = "neutral";
                   if (asset.status === "Active") statusVariant = "success";
-                  else if (asset.status === "Audit Requested" || asset.status === "Disposal Requested") statusVariant = "brand";
-                  else if (asset.status === "Under Maintenance" || asset.status === "Broken") statusVariant = "warning";
-                  else if (asset.status === "Lost" || asset.status === "Disposed") statusVariant = "danger";
+                  else if (
+                    asset.status === "Audit Requested" ||
+                    asset.status === "Disposal Requested"
+                  )
+                    statusVariant = "brand";
+                  else if (
+                    asset.status === "Under Maintenance" ||
+                    asset.status === "Broken"
+                  )
+                    statusVariant = "warning";
+                  else if (
+                    asset.status === "Lost" ||
+                    asset.status === "Disposed"
+                  )
+                    statusVariant = "danger";
 
                   return (
-                    <tr key={asset.asset_id} className="hover:bg-slate-50 transition-colors">
+                    <tr
+                      key={asset.asset_id}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
                       {/* QR ID — clickable to open modal */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {asset.qr_code_id ? (
@@ -638,20 +842,42 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
                       </td>
 
                       {/* Asset Name */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900 max-w-[200px] leading-snug">
                         {asset.asset_name}
                       </td>
 
                       {/* Category */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Badge variant="neutral">
+                      <td className="px-6 py-4 text-sm max-w-[220px]">
+                        <span className="inline-block px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-normal leading-snug">
                           {asset.category || "Uncategorized"}
-                        </Badge>
+                        </span>
                       </td>
 
                       {/* Location */}
                       <td className="px-6 py-4 text-sm font-medium text-slate-700">
-                        {locationPaths[asset.location_id] || "Unassigned"}
+                        {asset.home_location_id ? (
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-bold text-amber-900">
+                                {locationPaths[asset.location_id] ||
+                                  "Safe Zone"}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full">
+                                <ShieldCheckIcon className="w-3 h-3" />
+                                Temp Safe Zone
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              Home:{" "}
+                              <span className="font-medium">
+                                {locationPaths[asset.home_location_id] ||
+                                  "Original Room"}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          locationPaths[asset.location_id] || "Unassigned"
+                        )}
                       </td>
 
                       {/* Lifecycle Status */}
@@ -664,7 +890,9 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
                       {/* Usage Status (from last audit) */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {usage ? (
-                          <Badge variant={usage === "In Use" ? "success" : "neutral"}>
+                          <Badge
+                            variant={usage === "In Use" ? "success" : "neutral"}
+                          >
                             {usage}
                           </Badge>
                         ) : (
@@ -678,33 +906,100 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
                       {canEdit && (
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-1">
-                            {asset.qr_code_id ? (
-                              <button
-                                onClick={() => setQrModalAsset(asset)}
-                                title="View / Print QR Code"
-                                className="p-2 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
-                              >
-                                <QrCodeIcon className="w-5 h-5" />
-                              </button>
+                            {/* Headmaster Disposal Approval Workflow */}
+                            {activeTab === "Disposal Requests" &&
+                            userRole === "headmaster" ? (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleApproveDisposal(
+                                      asset.asset_id,
+                                      asset.asset_name,
+                                    )
+                                  }
+                                  className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors"
+                                  title="Approve Disposal"
+                                >
+                                  <CheckCircleIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleRejectDisposal(
+                                      asset.asset_id,
+                                      asset.asset_name,
+                                    )
+                                  }
+                                  className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                                  title="Reject Disposal"
+                                >
+                                  <XMarkIcon className="w-5 h-5" />
+                                </button>
+                              </>
                             ) : (
-                              <Button
-                                onClick={() => handleGenerateQR(asset.asset_id)}
-                                disabled={generatingQrFor === asset.asset_id}
-                                variant="secondary"
-                                className="px-3 py-1.5 text-xs h-8"
-                              >
-                                {generatingQrFor === asset.asset_id
-                                  ? "..."
-                                  : "Generate QR"}
-                              </Button>
+                              <>
+                                {/* Return evacuated asset back to its home room */}
+                                {asset.home_location_id && (
+                                  <button
+                                    onClick={() => handleReturnToHome(asset)}
+                                    className="p-2 rounded-lg text-amber-700 hover:bg-amber-50 transition-colors"
+                                    title="Return Asset to Home Room"
+                                  >
+                                    <ArrowUturnLeftIcon className="w-5 h-5" />
+                                  </button>
+                                )}
+
+                                {/* Existing Actions: QR, Edit, Request Disposal */}
+                                {asset.qr_code_id ? (
+                                  <button
+                                    onClick={() => setQrModalAsset(asset)}
+                                    title="View / Print QR Code"
+                                    className="p-2 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
+                                  >
+                                    <QrCodeIcon className="w-5 h-5" />
+                                  </button>
+                                ) : (
+                                  <Button
+                                    onClick={() =>
+                                      handleGenerateQR(asset.asset_id)
+                                    }
+                                    disabled={
+                                      generatingQrFor === asset.asset_id
+                                    }
+                                    variant="secondary"
+                                    className="px-3 py-1.5 text-xs h-8"
+                                  >
+                                    {generatingQrFor === asset.asset_id
+                                      ? "..."
+                                      : "Generate QR"}
+                                  </Button>
+                                )}
+
+                                <button
+                                  onClick={() => setEditingAsset(asset)}
+                                  className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                                  title="Edit"
+                                >
+                                  <PencilSquareIcon className="w-5 h-5" />
+                                </button>
+
+                                {asset.status !== "Disposal Requested" &&
+                                  asset.status !== "Disposed" &&
+                                  asset.status !== "Lost" && (
+                                    <button
+                                      onClick={() =>
+                                        handleRequestDisposal(
+                                          asset.asset_id,
+                                          asset.asset_name,
+                                        )
+                                      }
+                                      className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                                      title="Request Disposal"
+                                    >
+                                      <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                  )}
+                              </>
                             )}
-                            <button
-                              onClick={() => setEditingAsset(asset)}
-                              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-                              title="Edit"
-                            >
-                              <PencilSquareIcon className="w-5 h-5" />
-                            </button>
                           </div>
                         </td>
                       )}
@@ -725,6 +1020,14 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
           refreshData={fetchData}
         />
       )}
+
+      {showImportModal && (
+     <ImportAssetsModal
+       schoolId={schoolId}
+       onClose={() => setShowImportModal(false)}
+       onImportSuccess={fetchData}
+     />
+   )}
 
       {qrModalAsset && (
         <QrModal

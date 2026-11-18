@@ -1,25 +1,32 @@
 import { useState } from "react";
 import { supabase } from "../../supabaseClient";
-import { 
-  ShieldCheckIcon, 
-  InformationCircleIcon, 
-  EnvelopeIcon, 
-  PhoneIcon 
+import AuthLayout from "../../components/layout/AuthLayout";
+import Input from "../../components/ui/Input";
+import {
+  ShieldCheckIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  ArrowRightIcon,
+  LockClosedIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Auth({ onDemoLogin, navigate }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (authError) {
       setLoading(false);
@@ -37,7 +44,10 @@ export default function Auth({ onDemoLogin, navigate }) {
       setLoading(false);
 
       if (staffError) {
-        alert("Login successful, but failed to fetch staff profile: " + staffError.message);
+        alert(
+          "Login successful, but failed to fetch staff profile: " +
+            staffError.message
+        );
       } else if (staffData) {
         onDemoLogin(staffData);
       } else {
@@ -46,98 +56,119 @@ export default function Auth({ onDemoLogin, navigate }) {
     }
   };
 
+  const supportFooter = (
+    <>
+      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
+        Need Assistance? System Support
+      </p>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 text-xs sm:text-sm text-slate-600 font-medium">
+        <a
+          href="mailto:support@arus-sams.gov.my"
+          className="inline-flex items-center gap-1.5 hover:text-teal-700 transition-colors"
+        >
+          <EnvelopeIcon className="w-4 h-4 text-teal-600" />
+          support@arus-sams.gov.my
+        </a>
+        <a
+          href="tel:+6082000000"
+          className="inline-flex items-center gap-1.5 hover:text-teal-700 transition-colors"
+        >
+          <PhoneIcon className="w-4 h-4 text-teal-600" />
+          +60 82-000 000
+        </a>
+      </div>
+    </>
+  );
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row font-sans">
-      
-      {/* LEFT SIDE: BRAND & OBJECTIVES */}
-      <div className="w-full md:w-1/2 bg-slate-900 p-12 flex flex-col justify-center text-white">
-        <div className="max-w-md mx-auto space-y-8">
-          <div>
-            <h1 className="text-4xl font-black text-white mb-2">Arus-SAMS</h1>
-            <p className="text-slate-400 font-medium">School Asset Management & Flood Mitigation System</p>
-          </div>
+    <AuthLayout
+      icon={ShieldCheckIcon}
+      title={
+        <>
+          Staff Access<span className="text-teal-600">@</span>Portal
+        </>
+      }
+      subtitle={
+        <>
+          Please sign in using your{" "}
+          <strong className="text-teal-700 font-semibold">
+            registered school email
+          </strong>
+        </>
+      }
+      footer={supportFooter}
+    >
+      <form onSubmit={handleLogin} className="space-y-4">
+        <Input
+          id="staff-email"
+          label="Institutional Email"
+          icon={EnvelopeIcon}
+          type="email"
+          placeholder="teacher@school.edu.my"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <ShieldCheckIcon className="w-8 h-8 text-teal-500 shrink-0" />
-              <div>
-                <h3 className="font-bold">Project Objective</h3>
-                <p className="text-sm text-slate-400">To centralize asset tracking and provide real-time hydrological flood alerts for educational facilities.</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <InformationCircleIcon className="w-8 h-8 text-teal-500 shrink-0" />
-              <div>
-                <h3 className="font-bold">System Reliability</h3>
-                <p className="text-sm text-slate-400">Powered by iHYDRO live telemetry data, ensuring school assets are protected by proactive intelligence.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT SIDE: YOUR FUNCTIONAL LOGIN FORM */}
-      <div className="w-full md:w-1/2 p-12 flex flex-col justify-center items-center bg-slate-50">
-        <div className="w-full max-w-sm space-y-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-800">Staff Access Portal</h2>
-            <p className="text-sm text-slate-500 mt-1">Please sign in to continue</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Institutional Email</label>
-              <input 
-                type="email" placeholder="teacher@school.edu.my"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-                required
-              />
-            </div>
-            
-            <div>
-              {/* INJECTED FORGOT PASSWORD FLEX CONTAINER */}
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold text-slate-500 uppercase">Access Password</label>
-                <button 
-                  type="button"
-                  onClick={() => navigate("forgot-password")}
-                  className="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-              <input 
-                type="password" placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-                required
-              />
-            </div>
-
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full bg-teal-600 text-white py-3 rounded-lg font-bold hover:bg-teal-700 transition-colors shadow-md"
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label
+              htmlFor="staff-password"
+              className="block text-xs font-bold text-slate-600 uppercase tracking-wider"
             >
-              {loading ? "Authenticating..." : "Secure Login"}
+              Access Password
+            </label>
+            <button
+              type="button"
+              onClick={() => navigate("forgot-password")}
+              className="text-xs font-bold text-teal-600 hover:text-teal-800 underline-offset-2 hover:underline transition-colors cursor-pointer"
+            >
+              Forgot Password?
             </button>
-          </form>
-
-          {/* FOOTER CONTACT */}
-          <div className="pt-8 border-t border-slate-200 mt-8 space-y-3">
-            <p className="text-xs font-bold text-slate-400 uppercase">System Support</p>
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <EnvelopeIcon className="w-4 h-4" /> support@arus-sams.gov.my
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <PhoneIcon className="w-4 h-4" /> +60 82-000 000
-            </div>
           </div>
+
+          <Input
+            id="staff-password"
+            icon={LockClosedIcon}
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="p-1 text-slate-400 hover:text-teal-600 transition-colors cursor-pointer"
+              >
+                {showPassword ? (
+                  <EyeSlashIcon className="w-5 h-5" />
+                ) : (
+                  <EyeIcon className="w-5 h-5" />
+                )}
+              </button>
+            }
+          />
         </div>
-      </div>
-    </div>
+
+        {/* JoC-Style Primary Submit Button */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="group w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-semibold text-base shadow-lg shadow-teal-600/25 hover:shadow-xl hover:shadow-teal-600/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/15 group-hover:bg-white/25 flex items-center justify-center shrink-0 transition-colors">
+              <LockClosedIcon className="w-5 h-5 text-white" />
+            </div>
+            <span className="flex-1 text-left tracking-wide">
+              {loading ? "Authenticating..." : "Sign In to Portal"}
+            </span>
+            <ArrowRightIcon className="w-5 h-5 text-white/80 group-hover:text-white group-hover:translate-x-1 transition-all" />
+          </button>
+        </div>
+      </form>
+    </AuthLayout>
   );
 }

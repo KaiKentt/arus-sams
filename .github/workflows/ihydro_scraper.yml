@@ -1,0 +1,43 @@
+name: iHYDRO Live Telemetry Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      sync_stations_first:
+        description: "Sync master station list & coordinates before scraping?"
+        required: false
+        default: "false"
+
+jobs:
+  sync-telemetry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Optional — Sync Master Stations & Coordinates
+        if: ${{ github.event.inputs.sync_stations_first == 'true' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python src/ihydro/sync_stations.py
+          python src/ihydro/sync_coordinates.py
+
+      - name: Run Live Telemetry Pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python src/ihydro/live_telemetry_worker.py --once
