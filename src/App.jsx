@@ -7,7 +7,7 @@ import { useArusAuth } from "./hooks/useArusAuth";
 // --- 2. GLOBAL UI & LAYOUT ---
 import Sidebar from "./components/Sidebar";
 import TopMobileBar from "./components/TopMobileBar";
-import AlertBanner from "./components/AlertBanner";
+
 
 // --- 3. FEATURE MODULES ---
 // Auth Identity
@@ -34,6 +34,7 @@ import MobileAudit from "./pages/MobileAudit";
 
 // Utilities
 import LocationManager from "./pages/LocationManager";
+
 
 function isRecoveryUrl() {
   if (typeof window === "undefined") return false;
@@ -62,7 +63,6 @@ function App() {
     session,
     userRole,
     userSchoolId,
-    isCritical,
     handleDemoLogin,
     handleSignOut,
     handleSessionUpdate,
@@ -108,7 +108,7 @@ function App() {
   // --- MAIN UI RENDER (AUTHENTICATED) ---
   return (
     <div className="flex h-screen bg-slate-50 font-sans relative overflow-hidden">
-      <AlertBanner isCritical={isCritical} />
+      
 
       <Sidebar
         session={session}
