@@ -1,17 +1,119 @@
-/* 1. Import the font from Google */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* 1. Import Sora (Headings) & DM Sans (UI & Body) from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Sora:wght@300;400;600;700;800&display=swap');
 
 /* 2. Import Tailwind v4 */
 @import "tailwindcss";
 
-/* 3. Configure your theme directly in CSS */
+/* 3. Configure Theme Tokens Directly in CSS */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* 4. Force it on the body just to be absolutely sure */
+/* 4. Base Layer Defaults */
 @layer base {
   html, body {
     font-family: var(--font-sans);
+    color: #1e293b;
+    background-color: #f8fafc;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+/* 5. Keyframe Animations (JoC Motion & Dashboard Transitions) */
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes driftGlow {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(28px, -28px) scale(1.12);
+  }
+}
+
+@keyframes floatOrb {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(-24px) rotate(180deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+    opacity: 0.45;
+  }
+}
+
+/* 6. Shared System Surface & Layout Classes */
+.fade-in {
+  animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Daytime JoC-Inspired Auth Backdrop & Floating Elements */
+.auth-backdrop {
+  background: linear-gradient(
+    135deg,
+    rgba(240, 253, 250, 0.96) 0%,
+    rgba(236, 253, 245, 0.9) 48%,
+    rgba(224, 242, 254, 0.94) 100%
+  );
+}
+
+.auth-glow-1 {
+  background: radial-gradient(circle, #14b8a6, transparent 70%);
+  animation: driftGlow 14s ease-in-out infinite alternate;
+}
+
+.auth-glow-2 {
+  background: radial-gradient(circle, #10b981, transparent 70%);
+  animation: driftGlow 11s ease-in-out -4s infinite alternate;
+}
+
+.auth-glow-3 {
+  background: radial-gradient(circle, #06b6d4, transparent 70%);
+  animation: driftGlow 16s ease-in-out -8s infinite alternate;
+}
+
+.auth-orb-1 {
+  animation: floatOrb 22s linear infinite;
+}
+
+.auth-orb-2 {
+  animation: floatOrb 18s linear -6s infinite;
+}
+
+.auth-orb-3 {
+  animation: floatOrb 25s linear -12s infinite;
+}
+
+/* Frosted Glass Card & Tri-Tone Top Accent Bar */
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  box-shadow: 0 24px 60px -15px rgba(13, 148, 136, 0.16),
+              0 1px 0 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.glass-accent-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #0d9488, #10b981, #06b6d4);
 }
