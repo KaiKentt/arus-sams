@@ -1,6 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../supabaseClient";
 
+// Pure async helper: fetches from Supabase and returns enriched telemetry (no setState inside)
+async function loadSchoolTelemetry(schoolId) {
+  const { data: mappings, error: mapError } = await supabase
+    .from("school_station")
+    .select(`priority, stations (station_id, station_name, danger_level)`)
+    .eq("school_id", schoolId)
+    .order("priority", { ascending: true });
+
+  if (mapError) throw mapError;
+
+  const enrichedData = await Promise.all(
+    (mappings || []).map(async (mapping) => {
+      const station = mapping.stations;
+      const { data: waterData } = await supabase
+        .from("water_data")
+        .select("water_level, status, recorded_at")
+        .eq("station_id", station.station_id)
+        .order("recorded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      return {
+        priority: mapping.priority,
+        stationName: station.station_name,
+        dangerLevel: station.danger_level,
+        currentLevel: waterData ? waterData.water_level : "N/A",
+        status: waterData ? waterData.status : "unknown",
+        lastUpdated: waterData
+          ? new Date(waterData.recorded_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "Never",
+      };
+    })
+  );
+
+  return enrichedData;
+}
+
 export function useFloodDashboard(schoolId) {
   const [telemetry, setTelemetry] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,44 +48,13 @@ export function useFloodDashboard(schoolId) {
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [evacuationPlan, setEvacuationPlan] = useState([]);
 
+  // Manual refresh helper for Force Sync or button clicks
   const fetchDashboardData = useCallback(async () => {
+    if (!schoolId) return;
     setLoading(true);
     try {
-      const { data: mappings, error: mapError } = await supabase
-        .from("school_station")
-        .select(`priority, stations (station_id, station_name, danger_level)`)
-        .eq("school_id", schoolId)
-        .order("priority", { ascending: true });
-
-      if (mapError) throw mapError;
-
-      const enrichedData = await Promise.all(
-        mappings.map(async (mapping) => {
-          const station = mapping.stations;
-          const { data: waterData } = await supabase
-            .from("water_data")
-            .select("water_level, status, recorded_at")
-            .eq("station_id", station.station_id)
-            .order("recorded_at", { ascending: false })
-            .limit(1)
-            .single();
-
-          return {
-            priority: mapping.priority,
-            stationName: station.station_name,
-            dangerLevel: station.danger_level,
-            currentLevel: waterData ? waterData.water_level : "N/A",
-            status: waterData ? waterData.status : "unknown",
-            lastUpdated: waterData
-              ? new Date(waterData.recorded_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "Never",
-          };
-        }),
-      );
-      setTelemetry(enrichedData);
+      const data = await loadSchoolTelemetry(schoolId);
+      setTelemetry(data);
     } catch (error) {
       console.error("Error fetching telemetry:", error.message);
     } finally {
@@ -53,9 +62,30 @@ export function useFloodDashboard(schoolId) {
     }
   }, [schoolId]);
 
+  // Initial load on mount / schoolId change (setState only runs inside async callbacks)
   useEffect(() => {
-    if (schoolId) fetchDashboardData();
-  }, [schoolId, fetchDashboardData]);
+    if (!schoolId) return;
+    let ignore = false;
+
+    loadSchoolTelemetry(schoolId)
+      .then((data) => {
+        if (!ignore) {
+          setTelemetry(data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching telemetry:", error.message);
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [schoolId]);
 
   const handleForceSync = async () => {
     setIsSyncing(true);
@@ -86,7 +116,7 @@ export function useFloodDashboard(schoolId) {
           .from("schools")
           .select("sync_requested")
           .eq("school_id", schoolId)
-          .single();
+          .maybeSingle();
 
         if (data && data.sync_requested === false) {
           isPythonDone = true;
@@ -111,11 +141,15 @@ export function useFloodDashboard(schoolId) {
 
     setIsGeneratingPlan(true);
     try {
-      const { data, error } = await supabase.rpc("generate_evacuation_plan", { p_school_id: schoolId });
+      const { data, error } = await supabase.rpc("generate_evacuation_plan", {
+        p_school_id: schoolId,
+      });
       if (error) throw error;
 
       setEvacuationPlan(data);
-      alert("Evacuation Plan generated successfully! Ground staff can now view their tasks.");
+      alert(
+        "Evacuation Plan generated successfully! Ground staff can now view their tasks."
+      );
 
       window.dispatchEvent(new Event("evacuation_generated"));
     } catch (error) {

@@ -34,7 +34,6 @@ import MobileAudit from "./pages/MobileAudit";
 
 // Utilities
 import LocationManager from "./pages/LocationManager";
-import HydrologicalSimulator from "./pages/HydrologicalSimulator";
 
 function isRecoveryUrl() {
   if (typeof window === "undefined") return false;
@@ -169,7 +168,7 @@ function App() {
             />
           )}
           {currentTab === "mobile-audit" && <MobileAudit user={session} />}
-          {currentTab === "hydrological-simulator" && <HydrologicalSimulator />}
+          
         </div>
       </div>
     </div>
