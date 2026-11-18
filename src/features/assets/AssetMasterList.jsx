@@ -247,6 +247,63 @@ function QrModal({ asset, locationPath, schoolName, onClose }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+async function loadMasterListData(schoolId) {
+  const [assetsRes, locationsRes, schoolRes] = await Promise.all([
+    supabase
+      .from("assets")
+      .select("*")
+      .eq("school_id", schoolId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("locations")
+      .select("location_id, location_name, parent_location_id")
+      .eq("school_id", schoolId),
+    supabase
+      .from("schools")
+      .select("school_name")
+      .eq("school_id", schoolId)
+      .maybeSingle(),
+  ]);
+
+  const assets = assetsRes.data || [];
+  const locations = locationsRes.data || [];
+  const schoolName = schoolRes.data?.school_name || "";
+
+  const usageMap = {};
+  const assetIds = assets.map((a) => a.asset_id);
+  if (assetIds.length > 0) {
+    const { data: inspections } = await supabase
+      .from("asset_inspection")
+      .select("asset_id, usage_status, verified_at")
+      .in("asset_id", assetIds)
+      .order("verified_at", { ascending: false });
+
+    (inspections || []).forEach((row) => {
+      if (!usageMap[row.asset_id]) usageMap[row.asset_id] = row.usage_status;
+    });
+  }
+
+  const locMap = {};
+  locations.forEach((loc) => {
+    locMap[loc.location_id] = loc;
+  });
+
+  const paths = {};
+  locations.forEach((loc) => {
+    const parts = [];
+    let current = loc;
+    while (current) {
+      parts.unshift(current.location_name);
+      current = current.parent_location_id
+        ? locMap[current.parent_location_id]
+        : null;
+    }
+    paths[loc.location_id] = parts.join(" › ");
+  });
+
+  return { assets, usageMap, paths, schoolName };
+}
+
 
 export default function AssetMasterList({ schoolId, userRole, navigate }) {
   const [assets, setAssets] = useState([]);
@@ -351,6 +408,62 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
       return 0;
     });
   }, [filteredAssets, sortField, sortDir]);
+
+ const fetchData = useCallback(async () => {
+    if (!schoolId) return;
+    setLoading(true);
+    try {
+      const res = await loadMasterListData(schoolId);
+      setAssets(res.assets);
+      setLastUsageMap(res.usageMap);
+      setLocationPaths(res.paths);
+      setSchoolName(res.schoolName);
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+
+  useEffect(() => {
+    if (!schoolId) return;
+    let ignore = false;
+
+    loadMasterListData(schoolId)
+      .then((res) => {
+        if (ignore) return;
+        setAssets(res.assets);
+        setLastUsageMap(res.usageMap);
+        setLocationPaths(res.paths);
+        setSchoolName(res.schoolName);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    const channel = supabase
+      .channel(`assets-master-${schoolId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "assets",
+          filter: `school_id=eq.${schoolId}`,
+        },
+        () => {
+          loadMasterListData(schoolId).then((res) => {
+            if (ignore) return;
+            setAssets(res.assets);
+            setLastUsageMap(res.usageMap);
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      ignore = true;
+      supabase.removeChannel(channel);
+    };
+  }, [schoolId]);
 
   const handleGenerateQR = async (assetId) => {
     setGeneratingQrFor(assetId);
@@ -531,100 +644,6 @@ export default function AssetMasterList({ schoolId, userRole, navigate }) {
     }
   };
 
-  useEffect(() => {
-    if (!schoolId) return;
-    fetchData();
-
-    const channel = supabase
-      .channel(`assets-master-${schoolId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "assets",
-          filter: `school_id=eq.${schoolId}`,
-        },
-        () => {
-          fetchAssets();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [schoolId]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    await Promise.all([fetchAssets(), fetchLocationPaths(), fetchSchoolName()]);
-    setLoading(false);
-  };
-
-  const fetchSchoolName = async () => {
-    const { data } = await supabase
-      .from("schools")
-      .select("school_name")
-      .eq("school_id", schoolId)
-      .single();
-    if (data) setSchoolName(data.school_name || "");
-  };
-
-  const fetchAssets = async () => {
-    const { data, error } = await supabase
-      .from("assets")
-      .select("*")
-      .eq("school_id", schoolId)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setAssets(data);
-      fetchLastUsageStatus(data.map((a) => a.asset_id));
-    }
-  };
-
-  const fetchLastUsageStatus = async (assetIds) => {
-    if (!assetIds.length) return;
-    const { data } = await supabase
-      .from("asset_inspection")
-      .select("asset_id, usage_status, verified_at")
-      .in("asset_id", assetIds)
-      .order("verified_at", { ascending: false });
-
-    if (!data) return;
-    const map = {};
-    data.forEach((row) => {
-      if (!map[row.asset_id]) map[row.asset_id] = row.usage_status;
-    });
-    setLastUsageMap(map);
-  };
-
-  const fetchLocationPaths = async () => {
-    const { data } = await supabase
-      .from("locations")
-      .select("location_id, location_name, parent_location_id")
-      .eq("school_id", schoolId);
-
-    if (!data) return;
-    const map = {};
-    data.forEach((loc) => {
-      map[loc.location_id] = loc;
-    });
-    const paths = {};
-    data.forEach((loc) => {
-      const parts = [];
-      let current = loc;
-      while (current) {
-        parts.unshift(current.location_name);
-        current = current.parent_location_id
-          ? map[current.parent_location_id]
-          : null;
-      }
-      paths[loc.location_id] = parts.join(" › ");
-    });
-    setLocationPaths(paths);
-  };
 
   const closeQrModal = useCallback(() => setQrModalAsset(null), []);
 
